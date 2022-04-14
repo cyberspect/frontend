@@ -195,7 +195,10 @@ export default {
         this.oidcUserManager.getUser().then(oidcUser => {
           // oidcUser will only be set when coming from oidc-callback.html
           if (oidcUser === null) {
-            return;
+            if (window.location.hash === "#admin") {
+              return;  
+            }
+            oidcLogin();            
           }
 
           // Exchange OAuth2 Access Token for a JWT issued by Dependency-Track
