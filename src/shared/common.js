@@ -127,6 +127,8 @@ $common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnId, alt
 $common.makeAnalysisStateLabelFormatter = (i18n) => {
   return function (value) {
     switch (value) {
+      case 'APPROVED':
+      case 'REJECTED':
       case 'NOT_SET':
       case 'EXPLOITABLE':
       case 'IN_TRIAGE':
@@ -184,6 +186,31 @@ $common.makeAnalysisResponseLabelFormatter = (i18n) => {
       case 'ROLLBACK':
       case 'WORKAROUND_AVAILABLE':
         return i18n.$t(`message.${value.toLowerCase()}`)
+      default:
+        return null;
+    }
+  }
+};
+
+/**
+ *
+ * @param {*} i18n - VueI18n instance with $t translate function available
+ * @returns a specialized label for component and project classifiers (APPLICATION, LIBRARY, etc).
+ * It must have a corresponding entry in the locales files (e.g. src/locales/en.json)
+ * (application, library, etc.)
+ */
+$common.componentClassifierLabelFormatter = (i18n) => {
+  return function (value) {
+    switch (value) {
+      case 'APPLICATION':
+      case 'FRAMEWORK':
+      case 'LIBRARY':
+      case 'CONTAINER':
+      case 'OPERATING_SYSTEM':
+      case 'DEVICE':
+      case 'FIRMWARE':
+      case 'FILE':
+        return i18n.$t(`message.component_${value.toLowerCase()}`)
       default:
         return null;
     }
@@ -291,6 +318,7 @@ module.exports = {
   formatAnalyzerLabel: $common.formatAnalyzerLabel,
   makeAnalysisStateLabelFormatter: $common.makeAnalysisStateLabelFormatter,
   makeAnalysisJustificationLabelFormatter: $common.makeAnalysisJustificationLabelFormatter,
+  componentClassifierLabelFormatter: $common.componentClassifierLabelFormatter,
   formatTimestamp: $common.formatTimestamp,
   concatenateComponentName: $common.concatenateComponentName,
   valueWithDefault: $common.valueWithDefault,

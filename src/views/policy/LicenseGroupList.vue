@@ -10,7 +10,7 @@
       :columns="columns"
       :data="data"
       :options="options"
-      v-on:onLoadSuccess="tableLoaded" />
+      @on-load-success="tableLoaded"/>
     <create-license-group-modal v-on:refreshTable="refreshTable" />
   </div>
 </template>
@@ -108,9 +108,9 @@
                     <b-form-group :label="this.$t('message.licenses')">
                       <div class="list-group">
                         <span v-for="license in licenses">
-                          <actionable-list-group-item :value="license.name" delete-icon="true" v-on:actionClicked="removeLicense(license)"/>
+                          <actionable-list-group-item :value="license.name" :delete-icon="true" v-on:actionClicked="removeLicense(license)"/>
                         </span>
-                        <actionable-list-group-item add-icon="true" v-on:actionClicked="$root.$emit('bv::show::modal', 'selectLicenseModal')"/>
+                        <actionable-list-group-item :add-icon="true" v-on:actionClicked="$root.$emit('bv::show::modal', 'selectLicenseModal')"/>
                       </div>
                     </b-form-group>
                     <div style="text-align:right">
