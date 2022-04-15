@@ -200,12 +200,12 @@ export default {
               return;  
             } else {
               this.oidcLogin();
+              return;
             }
           }
 
           // Exchange OAuth2 Access Token for a JWT issued by Dependency-Track
           const url = this.$api.BASE_URL + "/" + this.$api.URL_USER_OIDC_LOGIN;
-          if (!('access_token' in oidcUser)) { oidcUser.access_token = "" };
           const requestBody = {
             accessToken: oidcUser.access_token,
             idToken: oidcUser.id_token
