@@ -195,7 +195,7 @@ export default {
         this.oidcUserManager.getUser().then(oidcUser => {
           // oidcUser will only be set when coming from oidc-callback.html
           if (oidcUser === null) {
-            var urlParams = new URLSearchParams(window.location.search)
+            var urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has("admin")) {
               return;  
             } else {
