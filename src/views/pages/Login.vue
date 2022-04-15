@@ -197,8 +197,9 @@ export default {
           if (oidcUser === null) {
             if (window.location.hash === "#admin") {
               return;  
+            } else {
+              this.oidcLogin();
             }
-            this.oidcLogin();            
           }
 
           // Exchange OAuth2 Access Token for a JWT issued by Dependency-Track
