@@ -1,7 +1,7 @@
 <template>
   <AppHeader fixed>
     <SidebarToggler class="d-lg-none" display="md" mobile />
-    <img class="d-lg-inline d-md-none d-sm-none bv-d-xs-down-none" style="margin-left:10px" src="@/assets/img/brand/dt-logo-symbol.svg" width="30" height="30" alt="Dependency-Track Logo"/>
+    <a href="{{ dtrack.home_url }}"><img class="d-lg-inline d-md-none d-sm-none bv-d-xs-down-none" style="margin-left:10px" src="@/assets/img/brand/dt-logo-symbol.svg" width="30" height="30" alt="Dependency-Track Logo"/></a>
     <SidebarToggler class="d-md-down-none" display="lg" :defaultOpen=true />
     <b-navbar-nav class="ml-auto">
       <DefaultHeaderProfileDropdown/>
@@ -20,5 +20,5 @@
       DefaultHeaderProfileDropdown,
       SidebarToggler
     }
-  }
+  }  
 </script>
