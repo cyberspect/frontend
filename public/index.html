@@ -34,6 +34,9 @@
             location.reload();
           }
         });
+        var parts = window.location.hostname.split('.')
+        parts.shift();
+        $('#home_url').prop('href', 'https://' + parts.join('.'));
       })();
     </script>
   </body>
