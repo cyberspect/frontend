@@ -22,6 +22,3 @@
     }
   }  
 </script>
-<script setup>
-  const home_url = process.env.VUE_APP_CYBERSPECT_HOME_URL
-</script>
