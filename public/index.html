@@ -33,12 +33,7 @@
             sessionStorage.clear();
             location.reload();
           }
-        });
-        window.addEventListener('load', function (event) {
-          var parts = window.location.hostname.split('.');
-          parts.shift();
-          document.getElementById('home_url').href = 'https://' + parts.join('.');
-        });        
+        });      
       })();
     </script>
   </body>
