@@ -5,17 +5,34 @@
     dropdown for version is changes, the table will not update. For whatever reason, adding the toolbar fixes it.
     -->
     <div id="findingsToolbar" class="bs-table-custom-toolbar">
-      <b-button size="md" variant="outline-primary"
+      <b-button id="apply-vex-button" size="md" variant="outline-primary"
                 v-b-modal.projectUploadVexModal
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
         <span class="fa fa-upload"></span> {{ $t('message.apply_vex') }}
       </b-button>
+      <b-tooltip target="apply-vex-button" triggers="hover focus">{{ $t('message.apply_vex_tooltip') }}</b-tooltip>
 
-      <b-button size="md" variant="outline-primary"
+      <b-button id="export-vex-button" size="md" variant="outline-primary"
                 @click="downloadVex()"
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
         <span class="fa fa-download"></span> {{ $t('message.export_vex') }}
       </b-button>
+      <b-tooltip target="export-vex-button" triggers="hover focus">{{ $t('message.export_vex_tooltip') }}</b-tooltip>
+
+      <b-button id="export-vdr-button" size="md" variant="outline-primary"
+                @click="downloadVdr()"
+                v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
+        <span class="fa fa-download"></span> {{ $t('message.export_vdr') }}
+      </b-button>
+      <b-tooltip target="export-vdr-button" triggers="hover focus">{{ $t('message.export_vdr_tooltip') }}</b-tooltip>
+
+      <b-button id="reanalyze-button" size="md" variant="outline-primary"
+                @click="reAnalyze()"
+                v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY]">
+        <span class="fa fa-refresh"></span> {{ $t('message.project_reanalyze') }}
+      </b-button>
+      <b-tooltip target="reanalyze-button" triggers="hover focus">{{ $t('message.project_reanalyze_tooltip') }}</b-tooltip>
+
 
       <!-- Future use when CSAF support is added
       <b-dropdown variant="outline-primary" v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
@@ -77,9 +94,10 @@
             title: this.$t('message.component'),
             field: "component.name",
             sortable: true,
-            formatter(value, row, index) {
-              let url = xssFilters.uriInUnQuotedAttr("../components/" + row.component.uuid);
-              return `<a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
+            formatter: (value, row, index) => {
+              let url = xssFilters.uriInUnQuotedAttr("../../../components/" + row.component.uuid);
+              let dependencyGraphUrl = xssFilters.uriInUnQuotedAttr("../../../projects/" + this.uuid + "/dependencyGraph/" + row.component.uuid)
+              return `<a href="${dependencyGraphUrl}"<i class="fa fa-sitemap" aria-hidden="true" style="float:right; padding-top: 4px; cursor:pointer" data-toggle="tooltip" data-placement="bottom" title="Show in dependency graph"></i></a> ` + `<a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
             }
           },
           {
@@ -87,7 +105,15 @@
             field: "component.version",
             sortable: true,
             formatter(value, row, index) {
-              return xssFilters.inHTMLData(common.valueWithDefault(value, ""));
+              if (Object.prototype.hasOwnProperty.call(row.component, "latestVersion")) {
+                if (row.component.latestVersion !== row.component.version) {
+                  return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Risk: Outdated component. Current version is: '+ xssFilters.inHTMLData(row.component.latestVersion) + '"><i class="fa fa-exclamation-triangle status-warning" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
+                } else {
+                  return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Component version is the latest available from the configured repositories"><i class="fa fa-exclamation-triangle status-passed" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
+                }
+              } else {
+                return xssFilters.inHTMLData(common.valueWithDefault(value, ""));
+              }
             }
           },
           {
@@ -103,8 +129,26 @@
             field: "vulnerability.vulnId",
             sortable: true,
             formatter(value, row, index) {
-              let url = xssFilters.uriInUnQuotedAttr("../vulnerabilities/" + row.vulnerability.source + "/" + value);
+              let url = xssFilters.uriInUnQuotedAttr("../../../vulnerabilities/" + row.vulnerability.source + "/" + value);
               return common.formatSourceLabel(row.vulnerability.source) + ` <a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
+            }
+          },
+          {
+            title: this.$t('message.aliases'),
+            field: "vulnerability.aliases",
+            sortable: true,
+            visible: false,
+            formatter(value, row, index) {
+              if (typeof value !== 'undefined') {
+                let label = "";
+                for (let i=0; i<value.length; i++) {
+                  let alias = common.resolveVulnAliasInfo(row.vulnerability.source, value[i]);
+                  let url = xssFilters.uriInUnQuotedAttr("../../../vulnerabilities/" + alias.source + "/" + alias.vulnId);
+                  label += common.formatSourceLabel(alias.source) + ` <a href="${url}">${xssFilters.inHTMLData(alias.vulnId)}</a>`
+                  if (i < value.length-1) label += ", "
+                }
+                return label;
+              }
             }
           },
           {
@@ -139,7 +183,7 @@
             field: "attribution.analyzerIdentity",
             sortable: true,
             formatter(value, row, index) {
-              return common.formatAnalyzerLabel(row.attribution.analyzerIdentity, row.vulnerability.vulnId,
+              return common.formatAnalyzerLabel(row.attribution.analyzerIdentity, row.vulnerability.source, row.vulnerability.vulnId,
                 row.attribution.alternateIdentifier, row.attribution.referenceUrl);
             }
           },
@@ -195,6 +239,16 @@
               template: `
                 <b-row class="expanded-row">
                   <b-col sm="6">
+                    <div v-if="finding.vulnerability.aliases && finding.vulnerability.aliases.length > 0">
+                    <label>Aliases</label>
+                      <b-card class="font-weight-bold">
+                        <b-card-text>
+                          <span v-for="alias in finding.vulnerability.aliases">
+                          <b-link style="margin-right:1.0rem" :href="'/vulnerabilities/' + aliasLabel(finding.vulnerability.source, alias).source + '/' + aliasLabel(finding.vulnerability.source, alias).vulnId">{{aliasLabel(finding.vulnerability.source, alias).vulnId}}</b-link>
+                         </span>
+                        </b-card-text>
+                     </b-card>
+                    </div>
                     <b-form-group v-if="finding.vulnerability.title" id="fieldset-1" :label="this.$t('message.title')" label-for="input-1">
                       <b-form-input id="input-1" v-model="finding.vulnerability.title" class="form-control disabled" readonly trim />
                     </b-form-group>
@@ -221,13 +275,13 @@
                     <b-form-group id="fieldset-8" v-if="this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)" :label="this.$t('message.comment')" label-for="input-8">
                       <b-form-textarea id="input-8" v-model="comment" rows="4" class="form-control" trim />
                       <div class="pull-right">
-                        <b-button size="sm" variant="outline-primary" @click="addComment"><span class="fa fa-comment-o"></span> Add Comment</b-button>
+                        <b-button size="sm" variant="outline-primary" @click="addComment"><span class="fa fa-comment-o"></span> {{ this.$t('message.add_comment') }}</b-button>
                       </div>
                     </b-form-group>
                     <b-form-group id="fieldset-9" v-if="this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)" :label="this.$t('message.analysis')" label-for="input-9">
                       <b-input-group id="input-9">
                         <b-form-select v-model="analysisState" :options="analysisChoices" @change="makeAnalysis" style="flex:0 1 auto; width:auto; margin-right:2rem;" v-b-tooltip.hover :title="this.$t('message.analysis_tooltip')"/>
-                        <bootstrap-toggle v-model="isSuppressed" :options="{ on: 'Suppressed', off: 'Suppress', onstyle: 'warning', offstyle: 'outline-disabled'}" :disabled="analysisState === null" />
+                        <bootstrap-toggle v-model="isSuppressed" :options="{ on: this.$t('message.suppressed'), off: this.$t('message.suppress'), onstyle: 'warning', offstyle: 'outline-disabled'}" :disabled="analysisState === null" />
                       </b-input-group>
                     </b-form-group>
                     <b-row v-if="this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)">
@@ -249,7 +303,7 @@
                     <b-form-group id="fieldset-12" v-if="this.isPermitted(this.PERMISSIONS.VIEW_VULNERABILITY)" :label="this.$t('message.details')" label-for="analysisDetailsField">
                       <b-form-textarea id="analysisDetailsField" v-model="analysisDetails" rows="7" class="form-control" :disabled="analysisState === null || !this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)" v-b-tooltip.hover :title="this.$t('message.analysis_details_tooltip')" />
                       <div class="pull-right">
-                        <b-button v-if="this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)" :disabled="analysisState === null" size="sm" variant="outline-primary" @click="makeAnalysis"><span class="fa fa-comment-o"></span> Update Details</b-button>
+                        <b-button v-if="this.isPermitted(this.PERMISSIONS.VULNERABILITY_ANALYSIS)" :disabled="analysisState === null" size="sm" variant="outline-primary" @click="makeAnalysis"><span class="fa fa-comment-o"></span> {{ this.$t('message.update_details') }}</b-button>
                       </div>
                     </b-form-group>
                   </b-col>
@@ -305,10 +359,15 @@
               },
               mixins: [permissionsMixin],
               methods: {
+                aliasLabel: function(vulnSource, alias) {
+                  return common.resolveVulnAliasInfo(vulnSource, alias);
+                },
                 getAnalysis: function() {
                   let queryString = "?project=" + projectUuid + "&component=" + this.finding.component.uuid + "&vulnerability=" + this.finding.vulnerability.uuid;
                   let url = `${this.$api.BASE_URL}/${this.$api.URL_ANALYSIS}` + queryString;
-                  this.axios.get(url).then((response) => {
+                  this.axios.get(url, {
+                    validateStatus: (status) => status === 200 || status === 404
+                  }).then((response) => {
                     this.updateAnalysisData(response.data);
                   });
                 },
@@ -400,7 +459,7 @@
         }
         return url;
       },
-      downloadVex: function (data) {
+      downloadVex: function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_VEX}/cyclonedx/project/${this.uuid}`;
         this.axios.request({
           responseType: 'blob',
@@ -427,6 +486,43 @@
           link.click();
         });
       },
+      downloadVdr: function () {
+        let url = `${this.$api.BASE_URL}/${this.$api.URL_BOM}/cyclonedx/project/${this.uuid}`;
+        this.axios.request({
+          responseType: 'blob',
+          url: url,
+          method: 'get',
+          params: {
+            format: 'json',
+            variant: 'vdr',
+            download: 'true'
+          }
+        }).then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          let filename = "bom.json";
+          let disposition = response.headers["content-disposition"]
+          if (disposition && disposition.indexOf('attachment') !== -1) {
+            let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            let matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+        });
+      },
+      reAnalyze: function (data) {
+        let analyzeUrl = `${this.$api.BASE_URL}/${this.$api.URL_FINDING}/project/${this.uuid}/analyze`
+        this.axios.post(analyzeUrl).then((response) => {
+          this.$toastr.s(this.$t('message.project_reanalyze_requested'));
+          //ignore token from response, don't wait for completion
+          this.refreshTable();
+        });
+      },
       refreshTable: function() {
         this.$refs.table.refresh({
           url: this.apiUrl(),
@@ -437,7 +533,9 @@
         this.$emit('total', data.total);
       },
       initializeTooltips: function () {
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').tooltip({
+          trigger: "hover"
+        });
       },
     },
     watch:{

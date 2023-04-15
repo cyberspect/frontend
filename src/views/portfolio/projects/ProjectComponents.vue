@@ -12,11 +12,12 @@
                   v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">
           <span class="fa fa-minus"></span> {{ $t('message.remove_component') }}
         </b-button>
-        <b-button size="md" variant="outline-primary"
+        <b-button id="upload-button" size="md" variant="outline-primary"
                   v-b-modal.projectUploadBomModal
                   v-permission:or="[PERMISSIONS.PORTFOLIO_MANAGEMENT, PERMISSIONS.BOM_UPLOAD]">
           <span class="fa fa-upload"></span> {{ $t('message.upload_bom') }}
         </b-button>
+        <b-tooltip target="upload-button" triggers="hover focus">{{ $t('message.upload_bom_tooltip') }}</b-tooltip>
         <b-dropdown variant="outline-primary" v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">
           <template #button-content>
             <span class="fa fa-download"></span> {{ $t('message.download_bom') }}
@@ -70,9 +71,10 @@
             title: this.$t('message.component'),
             field: "name",
             sortable: true,
-            formatter(value, row, index) {
-              let url = xssFilters.uriInUnQuotedAttr("../components/" + row.uuid);
-              return `<a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
+            formatter: (value, row, index) => {
+              let url = xssFilters.uriInUnQuotedAttr("../../../components/" + row.uuid);
+              let dependencyGraphUrl = xssFilters.uriInUnQuotedAttr("../../../projects/" + this.uuid + "/dependencyGraph/" + row.uuid)
+              return `<a href="${dependencyGraphUrl}"<i class="fa fa-sitemap" aria-hidden="true" style="float:right; padding-top: 4px; cursor:pointer" data-toggle="tooltip" data-placement="bottom" title="Show in dependency graph"></i></a> ` + `<a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
             }
           },
           {
@@ -125,7 +127,7 @@
             sortable: false,
             formatter(value, row, index) {
               if (Object.prototype.hasOwnProperty.call(row, "resolvedLicense")) {
-                let licenseurl = "../licenses/" + row.resolvedLicense.licenseId;
+                let licenseurl = "../../../licenses/" + row.resolvedLicense.licenseId;
                 return "<a href=\"" + licenseurl + "\">" + xssFilters.inHTMLData(row.resolvedLicense.licenseId) + "</a>";
               } else {
                 return xssFilters.inHTMLData(common.valueWithDefault(value, ""));
@@ -189,7 +191,9 @@
     },
     methods: {
       initializeTooltips: function () {
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').tooltip({
+          trigger: "hover"
+        });
       },
       removeDependencies: function () {
         let selections = this.$refs.table.getSelections();

@@ -22,14 +22,19 @@
   import General from "./configuration/General";
   import BomFormats from "./configuration/BomFormats";
   import Email from "./configuration/Email";
+  import Jira from "./configuration/JiraConfig";
   import InternalComponents from "./configuration/InternalComponents";
+  import TaskScheduler from "./configuration/TaskScheduler.vue";
+  import Search from "./configuration/Search.vue";
   // Analyzer plugins
   import InternalAnalyzer from "./analyzers/InternalAnalyzer";
   import OssIndexAnalyzer from "./analyzers/OssIndexAnalyzer";
   import VulnDbAnalyzer from "./analyzers/VulnDbAnalyzer";
+  import SnykAnalyzer from "./analyzers/SnykAnalyzer";
   // Vulnerability sources
   import VulnSourceNvd from "./vuln-sources/VulnSourceNvd";
   import VulnSourceGitHubAdvisories from "./vuln-sources/VulnSourceGitHubAdvisories";
+  import VulnSourceOSVAdvisories from "./vuln-sources/VulnSourceOSVAdvisories";
   // Repositories
   import Cargo from "./repositories/Cargo";
   import Composer from "./repositories/Composer";
@@ -60,9 +65,9 @@
     components: {
       EventBus,
       AdminMenu,
-      General, BomFormats, Email, InternalComponents,
-      InternalAnalyzer, OssIndexAnalyzer, VulnDbAnalyzer,
-      VulnSourceNvd, VulnSourceGitHubAdvisories,
+      General, BomFormats, Email, Jira, InternalComponents, TaskScheduler, Search,
+      InternalAnalyzer, OssIndexAnalyzer, VulnDbAnalyzer, SnykAnalyzer,
+      VulnSourceNvd, VulnSourceGitHubAdvisories, VulnSourceOSVAdvisories,
       Cargo, Composer, Gem, GoModules, Hex, Maven, Npm, Nuget, Python,
       Alerts, Templates,
       FortifySsc, DefectDojo, KennaSecurity,

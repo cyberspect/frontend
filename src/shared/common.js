@@ -95,7 +95,7 @@ $common.formatCweShortLabel = function formatCweShortLabel(cweId, cweName) {
 /**
  * Formats and returns a specialized label for a vulnerability analyzer (OSSINDEX_ANALYZER, INTERNAL_ANALYZER, etc).
  */
-$common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnId, alternateIdentifier, referenceUrl) {
+$common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnSource, vulnId, alternateIdentifier, referenceUrl) {
   if (! analyzer) {
     return null;
   }
@@ -103,7 +103,14 @@ $common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnId, alt
   let analyzerUrl = null;
   switch (analyzer) {
     case 'INTERNAL_ANALYZER':
-      analyzerLabel = "Internal";
+      analyzerLabel = vulnSource;
+      if(vulnSource === "GITHUB") {
+        analyzerUrl = "https://github.com/advisories/" + vulnId;
+      } else if(vulnSource === "OSV") {
+        analyzerUrl = "https://osv.dev/vulnerability/" + vulnId;
+      } else if(vulnSource === "SNYK") {
+        analyzerUrl = "https://security.snyk.io/vuln/" + vulnId;
+      }
       break;
     case 'OSSINDEX_ANALYZER':
       analyzerLabel = "OSS Index";
@@ -113,6 +120,10 @@ $common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnId, alt
       analyzerLabel = "VulnDB";
       analyzerUrl = "https://vulndb.cyberriskanalytics.com/vulnerabilities/" + vulnId;
       break;
+    case 'SNYK_ANALYZER':
+      analyzerLabel = "Snyk";
+      analyzerUrl = "https://security.snyk.io/vuln/" + vulnId;
+      break;
   }
   if (analyzerUrl) {
     analyzerLabel = `<a href="${analyzerUrl}" target="_blank">${analyzerLabel} <i class="fa fa-external-link"></i></a>`;
@@ -121,6 +132,82 @@ $common.formatAnalyzerLabel = function formatAnalyzerLabel(analyzer, vulnId, alt
   }
   return `<span class="label label-source label-analyzer" style="white-space:nowrap;">${analyzerLabel}</span>`;
 };
+
+/**
+ * Given the source of a vulnerability (vulnSource) and the vulnerabilities identifier, create
+ * a value object which also contains the proper name of the source and the URL to the vulnerability
+ * hosted by the source.
+ * @param vulnSource the source of a vulnerability
+ * @param vulnId the unique identifier
+ * @returns a SourceInfo object
+ */
+$common.resolveSourceVulnInfo = function resolveSourceVulnInfo(vulnSource, vulnId) {
+  let sourceInfo = {};
+  sourceInfo.source = vulnSource;
+  sourceInfo.vulnId = vulnId;
+  switch (vulnSource) {
+    case "INTERNAL":
+      // TODO
+      break;
+    case "NVD":
+      sourceInfo.name = "National Vulnerability Database";
+      sourceInfo.url = "https://nvd.nist.gov/vuln/detail/" + vulnId;
+      break;
+    case "GITHUB":
+      sourceInfo.name = "GitHub Advisories";
+      sourceInfo.url = "https://github.com/advisories/" + vulnId;
+      break;
+    case "OSSINDEX":
+      sourceInfo.name = "OSS Index";
+      sourceInfo.url = "https://ossindex.sonatype.org/vuln/" + vulnId;
+      break;
+    case "SNYK":
+      sourceInfo.name = "Snyk";
+      sourceInfo.url = "https://security.snyk.io/vuln/" + vulnId;
+      break;
+    case "OSV":
+      sourceInfo.name = "Open Source Vulnerability Database";
+      sourceInfo.url = "https://osv.dev/vulnerability/" + vulnId;
+      break;
+    case "GSD":
+      sourceInfo.name = "Global Security Database";
+      sourceInfo.url = "https://github.com/cloudsecurityalliance/gsd-database";
+      break;
+    case "VULNDB":
+      sourceInfo.name = "VulnDB";
+      sourceInfo.url = "https://vulndb.cyberriskanalytics.com/vulnerabilities/" + vulnId;
+      break;
+  }
+  return sourceInfo;
+}
+
+/**
+ * Given the source of a vulnerability (vulnSource) and an alias of the vulnerability, normalizes
+ * the return object.
+ * @param vulnSource the source of a Vulnerability object
+ * @param alias a VulnerabilityAlias response object for the given Vulnerability
+ * @returns A resolved and normalized object with metadata
+ */
+$common.resolveVulnAliasInfo = function resolveVulnAliasInfo(vulnSource, alias) {
+  if (!vulnSource || !alias) return;
+  if (vulnSource !== "INTERNAL" && alias.internalId) {
+    return $common.resolveSourceVulnInfo("INTERNAL", alias.internalId);
+  } else if (vulnSource !== "NVD" && alias.cveId) {
+    return $common.resolveSourceVulnInfo("NVD", alias.cveId);
+  } else if (vulnSource !== "GITHUB" && alias.ghsaId) {
+    return $common.resolveSourceVulnInfo("GITHUB", alias.ghsaId);
+  } else if (vulnSource !== "OSSINDEX" && alias.sonatypeId) {
+    return $common.resolveSourceVulnInfo("OSSINDEX", alias.sonatypeId);
+  } else if (vulnSource !== "SNYK" && alias.snykId) {
+    return $common.resolveSourceVulnInfo("SNYK", alias.snykId);
+  } else if (vulnSource !== "OSV" && alias.osvId) {
+    return $common.resolveSourceVulnInfo("OSV", alias.osvId);
+  } else if (vulnSource !== "GSD" && alias.gsdId) {
+    return $common.resolveSourceVulnInfo("GSD", alias.gsdId);
+  } else if (vulnSource !== "VULNDB" && alias.vulnDbId) {
+    return $common.resolveSourceVulnInfo("VULNDB", alias.vulnDbId);
+  }
+}
 
 /**
  *
@@ -323,6 +410,9 @@ $common.toBoolean = function(string) {
   if (!string) {
     return false;
   }
+  if (typeof string == "boolean") {
+    return string;
+  }
   switch(string.toLowerCase().trim()) {
     case "true": case "yes": case "1": return true;
     case "false": case "no": case "0": case null: return false;
@@ -339,6 +429,29 @@ $common.trimToNull = function(value) {
   return value;
 };
 
+$common.OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX = {
+  "LOW" : {
+    "LOW": "INFO",
+    "MEDIUM": "LOW",
+    "HIGH": "MEDIUM"
+  },
+  "MEDIUM" : {
+    "LOW": "LOW",
+    "MEDIUM": "MEDIUM",
+    "HIGH": "HIGH"
+  },
+  "HIGH" : {
+    "LOW": "MEDIUM",
+    "MEDIUM": "HIGH",
+    "HIGH": "CRITICAL"
+  },
+  "UNASSIGNED": {
+    "LOW": "UNASSIGNED",
+    "MEDIUM": "UNASSIGNED",
+    "HIGH": "UNASSIGNED"
+  }
+}
+
 module.exports = {
   formatSourceLabel: $common.formatSourceLabel,
   formatNotificationLabel: $common.formatNotificationLabel,
@@ -348,6 +461,8 @@ module.exports = {
   formatCweLabel: $common.formatCweLabel,
   formatCweShortLabel: $common.formatCweShortLabel,
   formatAnalyzerLabel: $common.formatAnalyzerLabel,
+  resolveSourceVulnInfo: $common.resolveSourceVulnInfo,
+  resolveVulnAliasInfo: $common.resolveVulnAliasInfo,
   makeAnalysisStateLabelFormatter: $common.makeAnalysisStateLabelFormatter,
   makeAnalysisJustificationLabelFormatter: $common.makeAnalysisJustificationLabelFormatter,
   componentClassifierLabelFormatter: $common.componentClassifierLabelFormatter,
@@ -358,5 +473,6 @@ module.exports = {
   calcProgressPercent: $common.calcProgressPercent,
   sleep: $common.sleep,
   toBoolean: $common.toBoolean,
-  trimToNull: $common.trimToNull
+  trimToNull: $common.trimToNull,
+  OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX: $common.OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX
 };

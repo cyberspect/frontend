@@ -36,6 +36,7 @@
   "URL_SEARCH": "api/v1/search",
   "URL_METRICS": "api/v1/metrics",
   "URL_CALCULATOR_CVSS": "api/v1/calculator/cvss",
+  "URL_CALCULATOR_OWASP": "api/v1/calculator/owasp",
   "URL_REPOSITORY": "api/v1/repository",
   "URL_CONFIG_PROPERTY": "api/v1/configProperty",
   "URL_NOTIFICATION_PUBLISHER": "api/v1/notification/publisher",
@@ -52,5 +53,6 @@
   "URL_LICENSE_GROUP": "api/v1/licenseGroup",
   "URL_ACL_MAPPING": "api/v1/acl/mapping",
   "URL_ACL_TEAM": "api/v1/acl/team",
-  "URL_VEX": "api/v1/vex"
+  "URL_VEX": "api/v1/vex",
+  "URL_OSV_ECOSYSTEM": "api/v1/integration/osv/ecosystem"
 }

@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="componentDetailsModal" size="lg" hide-header-close no-stacking :title="$t('message.component_details')">
+  <b-modal id="componentDetailsModal" size="lg" hide-header-close no-stacking :title="$t('message.component_details')" @show="initializeSelectedLicense">
     <b-tabs class="body-bg-color" style="border:0;padding:0">
       <b-tab class="body-bg-color" style="border:0;padding:0" active>
         <template v-slot:title><i class="fa fa-cube"></i> {{ $t('message.identity') }}</template>
@@ -66,6 +66,9 @@
                                      v-model="selectedLicense" :options="selectableLicenses"
                                      :label="$t('message.license')" :tooltip="$t('message.component_spdx_license_desc')"
                                      :disabled="this.isNotPermitted(PERMISSIONS.PORTFOLIO_MANAGEMENT)" />
+          <b-input-group-form-input id="component-license-url-input" input-group-size="mb-3" type="text" v-model="component.licenseUrl"
+                                    required="false" :label="$t('message.license_url')" :tooltip="$t('message.component_license_url_desc')"
+                                    :readonly="this.isNotPermitted(PERMISSIONS.PORTFOLIO_MANAGEMENT)" />
           <b-form-group
             id="component-copyright-form-group"
             :label="this.$t('message.copyright')"
@@ -218,6 +221,7 @@
           author: this.component.author,
           description: this.component.description,
           license: this.selectedLicense,
+          licenseUrl: this.component.licenseUrl,
           filename: this.component.filename,
           classifier: this.component.classifier,
           purl: this.component.purl,
@@ -253,14 +257,22 @@
         this.axios.get(url).then((response) => {
           for (let i = 0; i < response.data.length; i++) {
             let license = response.data[i];
-            this.selectableLicenses.push({value: license.licenseId, text: license.name});
-            if (this.component.resolvedLicense && this.component.resolvedLicense.uuid === license.uuid ) {
-              this.selectedLicense = license.licenseId;
-            }
+            this.selectableLicenses.push({value: license.licenseId, text: license.name, uuid: license.uuid});
           }
         }).catch((error) => {
           this.$toastr.w(this.$t('condition.unsuccessful_action'));
         });
+      },
+      initializeSelectedLicense: function () {
+        const resolvedLicense = this.component.resolvedLicense;
+        if (!resolvedLicense) {
+          this.selectedLicense = null;
+          return;
+        }
+        this.selectedLicense = this.selectableLicenses
+          .filter(license => license.uuid == resolvedLicense.uuid)
+          .map(license => license.value)
+          .find(() => true) || null;
       }
     }
   }

@@ -55,9 +55,24 @@
                 href: "#emailTab"
               },
               {
+                component: 'Jira',
+                name: this.$t('admin.jira'),
+                href: "#jiraTab"
+              },
+              {
                 component: 'InternalComponents',
                 name: this.$t('admin.internal_components'),
                 href: "#internalComponentsTab"
+              },
+              {
+                component: 'TaskScheduler',
+                name: this.$t('admin.task_scheduler'),
+                href: "#taskSchedulerTab"
+              },
+              {
+                component: 'Search',
+                name: this.$t('message.search'),
+                href: "#searchTab"
               }
             ]
           },
@@ -80,6 +95,11 @@
                 component: "VulnDbAnalyzer",
                 name: this.$t('admin.vulndb'),
                 href: "#scannerVulnDbTab"
+              },
+              {
+                component: "SnykAnalyzer",
+                name: this.$t('admin.snyk'),
+                href: "#scannerSnykTab"
               }
             ]
           },
@@ -97,6 +117,11 @@
                 component: "VulnSourceGitHubAdvisories",
                 name: this.$t('admin.github_advisories'),
                 href: "#vulnsourceGitHubAdvisoriesTab"
+              },
+              {
+                component: "VulnSourceOSVAdvisories",
+                name: this.$t('admin.osv_advisories'),
+                href: "#vulnsourceOSVAdvisoriesTab"
               }
             ]
           },

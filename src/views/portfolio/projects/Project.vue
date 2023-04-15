@@ -92,13 +92,13 @@
         </b-row>
       </b-card-body>
       <div id="project-info-footer" slot="footer">
-        <b-link class="font-weight-bold font-xs btn-block text-muted" v-b-modal.projectDetailsModal>{{ $t('message.view_details') }} <i class="fa fa-angle-right float-right font-lg"></i></b-link>
+        <b-link class="font-weight-bold font-xs btn-block text-muted" @click="initializeProjectDetailsModal">{{ $t('message.view_details') }} <i class="fa fa-angle-right float-right font-lg"></i></b-link>
       </div>
     </b-card>
     <b-tabs class="body-bg-color" style="border-left: 0; border-right:0; border-top:0 ">
       <b-tab class="body-bg-color overview-chart" style="border-left: 0; border-right:0; border-top:0 " active>
         <template v-slot:title><i class="fa fa-line-chart"></i> {{ $t('message.overview') }}</template>
-        <project-dashboard :key="this.uuid" style="border-left: 0; border-right:0; border-top:0 "/>
+        <project-dashboard :key="this.uuid" :uuid="this.uuid" :project="this.project" style="border-left: 0; border-right:0; border-top:0 "/>
       </b-tab>
       <b-tab>
         <template v-slot:title><i class="fa fa-cubes"></i> {{ $t('message.components') }} <b-badge variant="tab-total">{{ totalComponents }}</b-badge></template>
@@ -108,7 +108,7 @@
         <template v-slot:title><i class="fa fa-exchange"></i> {{ $t('message.services') }} <b-badge variant="tab-total">{{ totalServices }}</b-badge></template>
         <project-services :key="this.uuid" :uuid="this.uuid" v-on:total="totalServices = $event" />
       </b-tab>
-      <b-tab>
+      <b-tab ref="tabDependencyGraph">
         <template v-slot:title><i class="fa fa-sitemap"></i> {{ $t('message.dependency_graph') }} <b-badge variant="tab-total">{{ totalDependencyGraphs }}</b-badge></template>
         <project-dependency-graph :key="this.uuid" :uuid="this.uuid" :project="this.project" v-on:total="totalDependencyGraphs = $event" />
       </b-tab>
@@ -125,7 +125,7 @@
         <project-policy-violations :key="this.uuid" :uuid="this.uuid" v-on:total="totalViolations = $event" />
       </b-tab>
     </b-tabs>
-    <project-details-modal :project="cloneDeep(project)" v-on:projectUpdated="syncProjectFields"/>
+    <project-details-modal :project="cloneDeep(project)" :uuid="this.uuid" v-on:projectUpdated="syncProjectFields"/>
     <project-properties-modal :uuid="this.uuid" />
     <project-create-property-modal :uuid="this.uuid" />
     <project-add-version-modal :uuid="this.uuid" />
@@ -204,7 +204,8 @@
         totalDependencyGraphs: 0,
         totalFindings: 0,
         totalEpss: 0,
-        totalViolations: 0
+        totalViolations: 0,
+        tabIndex: 0
       }
     },
     methods: {
@@ -240,18 +241,27 @@
           this.currentUnassigned = common.valueWithDefault(response.data.unassigned, 0);
           this.currentRiskScore = common.valueWithDefault(response.data.inheritedRiskScore, 0);
         });
+      },
+      initializeProjectDetailsModal: function () {
+        this.$root.$emit('initializeProjectDetailsModal')
       }
     },
     beforeMount() {
       this.uuid = this.$route.params.uuid;
+      this.initialize();
     },
     mounted() {
-      this.initialize();
+      if (this.$route.params.componentUuid){
+        this.$refs.tabDependencyGraph.active = true
+      }
     },
     watch:{
       $route (to, from){
         this.uuid = this.$route.params.uuid;
         this.initialize();
+        if (this.$route.params.componentUuid){
+          this.$refs.tabDependencyGraph.activate()
+        }
       }
     },
     destroyed() {
