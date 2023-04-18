@@ -16,6 +16,7 @@
   import xssFilters from "xss-filters";
   import BootstrapToggle from 'vue-bootstrap-toggle'
   import permissionsMixin from "../../../mixins/permissionsMixin";
+  import {loadUserPreferencesForBootstrapTable} from "@/shared/utils";
 
   export default {
     props: {
@@ -35,6 +36,23 @@
             formatter(value, row, index) {
               let url = xssFilters.uriInUnQuotedAttr("../../vulnerabilities/" + row.source + "/" + value);
               return common.formatSourceLabel(row.source) + ` <a href="${url}">${xssFilters.inHTMLData(value)}</a>`;
+            }
+          },
+          {
+            title: this.$t('message.aliases'),
+            field: "aliases",
+            visible: false,
+            formatter(value, row, index) {
+              if (typeof value !== 'undefined') {
+                let label = "";
+                for (let i=0; i<value.length; i++) {
+                  let alias = common.resolveVulnAliasInfo(row.source, value[i]);
+                  let url = xssFilters.uriInUnQuotedAttr("../vulnerabilities/" + alias.source + "/" + alias.vulnId);
+                  label += common.formatSourceLabel(alias.source) + ` <a href="${url}">${xssFilters.inHTMLData(alias.vulnId)}</a>`
+                  if (i < value.length-1) label += "<br/><br/>"
+                }
+                return label;
+              }
             }
           },
           {
@@ -129,7 +147,9 @@
           sidePagination: 'server',
           queryParamsType: 'pageSize',
           pageList: '[10, 25, 50, 100]',
-          pageSize: 10,
+          pageSize: (localStorage && localStorage.getItem("ComponentVulnerabilitiesPageSize") !== null) ? Number(localStorage.getItem("ComponentVulnerabilitiesPageSize")) : 10,
+          sortName: (localStorage && localStorage.getItem("ComponentVulnerabilitiesSortName") !== null) ? localStorage.getItem("ComponentVulnerabilitiesSortName") : undefined,
+          sortOrder: (localStorage && localStorage.getItem("ComponentVulnerabilitiesSortOrder") !== null) ? localStorage.getItem("ComponentVulnerabilitiesSortOrder") : undefined,
           icons: {
             refresh: 'fa-refresh'
           },
@@ -138,12 +158,29 @@
             res.total = xhr.getResponseHeader("X-Total-Count");
             return res;
           },
-          url: `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/component/${this.uuid}`
+          url: `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/component/${this.uuid}`,
+          onPageChange: ((number, size) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentVulnerabilitiesPageSize", size.toString())
+            }
+          }),
+          onColumnSwitch: ((field, checked) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentVulnerabilitiesShow"+common.capitalize(field), checked.toString())
+            }
+          }),
+          onSort: ((name, order) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentVulnerabilitiesSortName", name);
+              localStorage.setItem("ComponentVulnerabilitiesSortOrder", order);
+            }
+          })
         }
       };
     },
     methods: {
       tableLoaded: function(data) {
+        loadUserPreferencesForBootstrapTable(this, "ComponentVulnerabilities", this.$refs.table.columns);
         if (data && Object.prototype.hasOwnProperty.call(data, "total")) {
           this.$emit('total', data.total);
         } else {

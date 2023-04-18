@@ -23,7 +23,8 @@
       ref="table"
       :columns="columns"
       :data="data"
-      :options="options">
+      :options="options"
+      @on-pre-body="onPreBody">
     </bootstrap-table>
   </div>
 </template>
@@ -38,6 +39,7 @@
   import BInputGroupFormInput from "../../../forms/BInputGroupFormInput";
   import xssFilters from "xss-filters";
   import SeverityProgressBar from "@/views/components/SeverityProgressBar";
+  import {loadUserPreferencesForBootstrapTable} from "@/shared/utils";
 
   export default {
     mixins: [permissionsMixin],
@@ -46,6 +48,36 @@
       PortfolioWidgetRow,
       BInputGroupFormSelect,
       BInputGroupFormInput
+    },
+    beforeCreate() {
+      this.subject = (localStorage && localStorage.getItem("ComponentSearchSubject") !== null) ? localStorage.getItem("ComponentSearchSubject") : 'COORDINATES';
+    },
+    beforeMount() {
+      if (this.$route.hash) {
+        let pattern = /#\/search\/(COORDINATES)\/group=([^\/)]*)\/name=([^\/]*)\/version=([^\/]*)/gi;
+        let matches = pattern.exec(this.$route.hash);
+        if (matches) {
+          this.subject = matches[1].toUpperCase();
+          this.coordinatesGroup = decodeURIComponent(matches[2]);
+          this.coordinatesName = decodeURIComponent(matches[3]);
+          this.coordinatesVersion = decodeURIComponent(matches[4]);
+        } else {
+          pattern = /#\/search\/(?!COORDINATES)([^\/]*)\/(.*)/gi;
+          matches = pattern.exec(this.$route.hash)
+          if (matches && this.subjects.some(subject => subject.value === matches[1].toUpperCase())) {
+            this.subject = matches[1].toUpperCase();
+            this.value = decodeURIComponent(matches[2]);
+          }
+        }
+        this.changeSearchUrl = false;
+      }
+    },
+    watch: {
+      subject () {
+        if (localStorage) {
+          localStorage.setItem("ComponentSearchSubject", this.subject);
+        }
+      }
     },
     methods: {
       createQueryParams: function() {
@@ -81,11 +113,29 @@
           this.options.url = `${this.$api.BASE_URL}/${this.$api.URL_COMPONENT}/identity?${queryParams}`;
           this.$refs.table.refresh({ silent: true });
         }
+        if (this.changeSearchUrl) {
+          if (this.subject === 'COORDINATES') {
+            let urlCoordinatesGroup = this.coordinatesGroup ? encodeURIComponent(this.coordinatesGroup) : '';
+            let urlCoordinatesName = this.coordinatesName ? encodeURIComponent(this.coordinatesName) : '';
+            let urlCoordinatesVersion = this.coordinatesVersion ? encodeURIComponent(this.coordinatesVersion) : '';
+            this.$router.replace({path: 'components', hash: '#/search/' + this.subject + '/group=' + urlCoordinatesGroup + '/name=' + urlCoordinatesName + '/version=' + urlCoordinatesVersion})
+          } else {
+            let urlValue = this.value ? encodeURIComponent(this.value) : '';
+            this.$router.replace({path: 'components', hash: '#/search/' + this.subject + '/' + urlValue})
+          }
+        }
+      },
+      onPreBody: function() {
+        loadUserPreferencesForBootstrapTable(this, "ComponentSearch", this.$refs.table.columns);
+        if (!this.changeSearchUrl) {
+          this.performSearch();
+          this.changeSearchUrl = true;
+        }
       }
     },
     data() {
       return {
-        subject: 'COORDINATES',
+        subject: this.subject,
         value: null,
         coordinatesGroup: null,
         coordinatesName: null,
@@ -97,6 +147,7 @@
           {value: 'SWID_TAGID', text: this.$t('message.swid_tagid')},
           {value: 'HASH', text: this.$t('message.hashes_short_desc')}
         ],
+        changeSearchUrl: false,
         columns: [
           {
             title: this.$t('message.component'),
@@ -202,7 +253,9 @@
           sidePagination: 'server',
           queryParamsType: 'pageSize',
           pageList: '[10, 25, 50, 100]',
-          pageSize: 10,
+          pageSize: (localStorage && localStorage.getItem("ComponentSearchPageSize") !== null) ? Number(localStorage.getItem("ComponentSearchPageSize")) : 10,
+          sortName: (localStorage && localStorage.getItem("ComponentSearchSortName") !== null) ? localStorage.getItem("ComponentSearchSortName") : undefined,
+          sortOrder: (localStorage && localStorage.getItem("ComponentSearchSortOrder") !== null) ? localStorage.getItem("ComponentSearchSortOrder") : undefined,
           icons: {
             refresh: 'fa-refresh'
           },
@@ -211,7 +264,23 @@
             res.total = xhr.getResponseHeader("X-Total-Count");
             return res;
           },
-          url: `${this.$api.BASE_URL}/${this.$api.URL_COMPONENT}/identity`
+          url: `${this.$api.BASE_URL}/${this.$api.URL_COMPONENT}/identity`,
+          onPageChange: ((number, size) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentSearchPageSize", size.toString())
+            }
+          }),
+          onColumnSwitch: ((field, checked) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentSearchShow"+common.capitalize(field), checked.toString())
+            }
+          }),
+          onSort: ((name, order) => {
+            if (localStorage) {
+              localStorage.setItem("ComponentSearchSortName", name);
+              localStorage.setItem("ComponentSearchSortOrder", order);
+            }
+          })
         }
       };
     }
