@@ -53,7 +53,6 @@
     "project_name": "Project Name",
     "tag_name": "Tag Name",
     "version": "Version",
-    "last_bom_import": "Last BOM Import",
     "bom_format": "BOM Format",
     "active": "Active",
     "name": "Name",
@@ -278,6 +277,7 @@
     "component_author": "Author",
     "coordinates": "Coordinates",
     "coordinates_version_tooltip": "You can use the comparison operators >, <, >=, <=, == and != to match specific versions or version ranges",
+    "age_tooltip":  "Age in ISO-8601 period format (e.g. P1Y = 1 Year; P2Y3M = 2 Years, 3 Months)",
     "package_url_full": "Package URL (PURL)",
     "swid_tagid": "SWID Tag ID",
     "cpe": "CPE",
@@ -509,7 +509,8 @@
     "show_in_dependency_graph": "Show in dependency graph",
     "show_complete_graph": "Show complete graph",
     "not_found_in_dependency_graph": "Dependency could not be found in dependency graph",
-    "reindex": "Rebuild index(es)"
+    "reindex": "Rebuild index(es)",
+    "show_update_information": "Highlight outdated components"
   },
   "admin": {
     "configuration": "Configuration",
@@ -531,6 +532,7 @@
     "repositories": "Repositories",
     "cargo": "Cargo",
     "composer": "Composer",
+    "cpan": "CPAN",
     "gem": "Gem",
     "go_modules": "Go Modules",
     "hex": "Hex",
@@ -588,6 +590,7 @@
     "analyzer_vulndb_enable": "Enable VulnDB analyzer",
     "analyzer_vulndb_desc": "VulnDB is a commercial service from Risk Based Security which identifies vulnerabilities in third-party components. Dependency-Track integrates natively with the VulnDB service to provide highly accurate results. Use of this analyzer requires a valid CPE for the components being analyzed.",
     "analyzer_snyk_enable": "Enable Snyk analyzer",
+    "analyzer_snyk_alias_sync_warning": "Snyk does not differentiate between related and identical vulnerabilities. Proceed with caution.",
     "analyzer_snyk_org_id": "Organization ID",
     "analyzer_snyk_api_version": "API Version",
     "analyzer_snyk_api_version_warning": "Changing the default version may break the integration!",
@@ -597,6 +600,8 @@
     "analyzer_snyk_how_to_api_version_help": "Where do I find available versions?",
     "analyzer_snyk_multiple_tokens_info": "Multiple tokens may be provided by separating them with semicolons, e.g. ",
     "analyzer_snyk_why_multiple_cvss": "Why are there multiple CVSS Scores for the same vulnerability?",
+    "vulnsource_alias_sync_enable": "Enable vulnerability alias synchronization",
+    "vulnsource_alias_sync_enable_tooltip": "Alias data can help in identifying identical vulnerabilities across multiple databases. If the source provides this data, synchronize it with Dependency-Track's database.",
     "vulnsource_nvd_enable": "Enable National Vulnerability Database mirroring",
     "vulnsource_nvd_desc": "The National Vulnerability Database (NVD) is the largest publicly available source of vulnerability intelligence. It is maintained by a group within the National Institute of Standards and Technology (NIST) and builds upon the work of MITRE and others. Vulnerabilities in the NVD are called Common Vulnerabilities and Exposures (CVE). There are over 100,000 CVEs documented in the NVD spanning from the 1990’s to the present.",
     "vulnsource_nvd_feeds_url": "NVD Feeds URL",
@@ -605,6 +610,7 @@
     "vulnsource_osv_advisories_enable": "Select ecosystem to enable Google OSV Advisory mirroring",
     "vulnsource_osv_advisories_desc": "Google OSV is a distributed vulnerability and triage infrastructure for open source projects aimed at helping both open source maintainers and consumers of open source. It serves as an aggregator of vulnerability databases that have adopted the OpenSSF Vulnerability format.",
     "vulnsource_osv_base_url": "OSV Base URL",
+    "vulnsource_osv_alias_sync_warning": "OSV may report non-identical vulnerabilities as aliases. Proceed with caution.",
     "select_ecosystem": "Select Ecosystems",
     "registered_email_address": "Registered email address",
     "api_token": "API token",
@@ -722,6 +728,8 @@
     "jira_url": "Jira base URL",
     "jira_username": "Jira user (service account). The user must be provisioned to the appropriate jira instance and permitted to create issues.",
     "jira_password": "Jira password",
+    "jira_auth_with_token": "Jira personal access token",
+    "bearer_token_auth_enable": "Authenticate with a personal access token",
     "jira_ticket_type": "Jira ticket type",
     "reindex_projects": "Projects",
     "reindex_components": "Components",
@@ -747,7 +755,8 @@
     "http_status_code": "HTTP Status Code",
     "unsuccessful_action": "Could not perform the requested action",
     "http_request_error": "HTTP Request Error",
-    "server_error": "Server Error"
+    "server_error": "Server Error",
+    "forbidden": "Forbidden (403)"
   },
   "violation": {
     "info": "Inform",

@@ -13,6 +13,7 @@
         v-model="jiraUrl"
         lazy="true"
       />
+      <c-switch id="jiraAuthWithTokenEnabled" color="primary" v-model="enabled" label v-bind="labelIcon"/>{{$t('admin.bearer_token_auth_enable')}}
       <b-validated-input-group-form-input
         id="jira-username"
         :label="$t('admin.jira_username')"
@@ -21,6 +22,7 @@
         type="text"
         v-model="jiraUsername"
         lazy="true"
+        v-if="!enabled"
       />
       <b-validated-input-group-form-input
         id="jira-password"
@@ -30,6 +32,17 @@
         v-model="jiraPassword"
         lazy="true"
         conceal="true"
+        v-if="!enabled"
+      />
+      <b-validated-input-group-form-input
+        id="jira-token"
+        :label="$t('admin.jira_auth_with_token')"
+        input-group-size="mb-3"
+        type="password"
+        v-model="jiraPassword"
+        lazy="true"
+        conceal="true"
+        v-if="enabled"
       />
     </b-card-body>
     <b-card-footer>
@@ -40,16 +53,19 @@
 <script>
 import BValidatedInputGroupFormInput from '../../../forms/BValidatedInputGroupFormInput'
 import configPropertyMixin from "../mixins/configPropertyMixin";
+import {Switch as cSwitch} from "@coreui/vue";
 export default {
   mixins: [configPropertyMixin],
   props: {
     header: String
   },
   components: {
+    cSwitch,
     BValidatedInputGroupFormInput
   },
   data() {
     return {
+      enabled: false,
       jiraUrl: "",
       jiraUsername: "",
       jiraPassword: "",
@@ -57,25 +73,31 @@ export default {
   },
   methods: {
     saveChanges: function() {
+      if (this.enabled) {
+        this.jiraUsername= "";
+      }
+
       this.updateConfigProperties([
-        {groupName: 'jira', propertyName: 'jira.url', propertyValue: this.jiraUrl},
-        {groupName: 'jira', propertyName: 'jira.username', propertyValue: this.jiraUsername}
+        {groupName: 'integrations', propertyName: 'jira.url', propertyValue: this.jiraUrl},
+        {groupName: 'integrations', propertyName: 'jira.username', propertyValue: this.jiraUsername}
       ]);
       if (this.jiraPassword !== "HiddenDecryptedPropertyPlaceholder") {
-        this.updateConfigProperty("jira", "jira.password", this.jiraPassword);
+        this.updateConfigProperty("integrations", "jira.password", this.jiraPassword);
       }
     }
   },
   created () {
     this.axios.get(this.configUrl).then((response) => {
-      let configItems = response.data.filter(function (item) { return item.groupName === "jira" });
+      let configItems = response.data.filter(function (item) { return item.groupName === "integrations" });
       for (let i=0; i<configItems.length; i++) {
         let item = configItems[i];
         switch (item.propertyName) {
           case "jira.url":
             this.jiraUrl = item.propertyValue; break;
           case "jira.username":
-            this.jiraUsername = item.propertyValue; break;
+            this.jiraUsername = item.propertyValue;
+            this.enabled = this.jiraUsername === undefined;
+            break;
           case "jira.password":
             this.jiraPassword = item.propertyValue; break;
         }

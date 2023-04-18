@@ -14,7 +14,7 @@
                                    v-on:change="saveCondition" v-model="value" :options="possibleValues" />
 
         <b-input-group-form-input v-else-if="subject !== 'COORDINATES' && !isSubjectSelectable" id="input-value" required="true" type="text" v-model="value" lazy="true"
-                                  v-debounce:750ms="saveCondition" :debounce-events="'keyup'" />
+                                  v-debounce:750ms="saveCondition" :tooltip="valueInputTooltip()" :debounce-events="'keyup'" />
 
         <b-input-group v-else-if="subject === 'COORDINATES'">
           <b-form-input id="input-value-coordinates-group" :placeholder="$t('message.group')" type="text" v-model="coordinatesGroup" v-debounce:750ms="saveCondition" :debounce-events="'keyup'"></b-form-input>
@@ -63,7 +63,7 @@
         coordinatesName: null,
         coordinatesVersion: null,
         subjects: [
-          //{value: 'AGE', text: this.$t('message.age')},
+          {value: 'AGE', text: this.$t('message.age')},
           //{value: 'ANALYZER', text: this.$t('message.analyzer')},
           //{value: 'BOM', text: this.$t('message.bom')},
           {value: 'SEVERITY', text: this.$t('message.severity')},
@@ -75,7 +75,8 @@
           {value: 'SWID_TAGID', text: this.$t('message.swid_tagid')},
           {value: 'VERSION', text: this.$t('message.version')},
           {value: 'COMPONENT_HASH', text: this.$t('message.component_hash')},
-          {value: 'CWE', text: this.$t('message.cwe_full')}
+          {value: 'CWE', text: this.$t('message.cwe_full')},
+          {value: 'VULNERABILITY_ID', text: this.$t('message.vulnerability_vuln_id')}
         ],
         objectOperators: [
           {value: 'IS', text: this.$t('operator.is')},
@@ -144,6 +145,8 @@
             return false;
           case 'CWE':
             return false;
+          case 'VULNERABILITY_ID':
+            return false;
           default:
             return false;
         }
@@ -203,6 +206,9 @@
             break;
           case 'CWE':
             this.operators = this.listOperators;
+            break;
+          case 'VULNERABILITY_ID':
+            this.operators = this.objectOperators;
             break;
           default:
             this.operators = [];
@@ -315,6 +321,14 @@
           {value: "INFO", text: this.$t('severity.info')},
           {value: "UNASSIGNED", text: this.$t('severity.unassigned')}
         ];
+      },
+      valueInputTooltip: function () {
+        switch (this.subject) {
+          case "AGE":
+            return this.$t('message.age_tooltip');
+          default:
+            return "";
+        }
       }
     }
   }

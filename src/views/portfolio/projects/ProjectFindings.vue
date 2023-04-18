@@ -68,6 +68,7 @@
   import BootstrapToggle from 'vue-bootstrap-toggle';
   import ProjectUploadVexModal from "@/views/portfolio/projects/ProjectUploadVexModal";
   import $ from "jquery";
+  import {loadUserPreferencesForBootstrapTable} from "@/shared/utils";
 
   export default {
     props: {
@@ -82,9 +83,12 @@
       BootstrapToggle,
       ProjectUploadVexModal
     },
+    beforeCreate() {
+      this.showSuppressedFindings = (localStorage && localStorage.getItem("ProjectFindingsShowSuppressedFindings") !== null) ? (localStorage.getItem("ProjectFindingsShowSuppressedFindings") === "true") : false;
+    },
     data() {
       return {
-        showSuppressedFindings: false,
+        showSuppressedFindings: this.showSuppressedFindings,
         labelIcon: {
           dataOn: '\u2713',
           dataOff: '\u2715'
@@ -136,7 +140,6 @@
           {
             title: this.$t('message.aliases'),
             field: "vulnerability.aliases",
-            sortable: true,
             visible: false,
             formatter(value, row, index) {
               if (typeof value !== 'undefined') {
@@ -145,7 +148,7 @@
                   let alias = common.resolveVulnAliasInfo(row.vulnerability.source, value[i]);
                   let url = xssFilters.uriInUnQuotedAttr("../../../vulnerabilities/" + alias.source + "/" + alias.vulnId);
                   label += common.formatSourceLabel(alias.source) + ` <a href="${url}">${xssFilters.inHTMLData(alias.vulnId)}</a>`
-                  if (i < value.length-1) label += ", "
+                  if (i < value.length-1) label += "<br/><br/>"
                 }
                 return label;
               }
@@ -223,7 +226,9 @@
           toolbar: '#findingsToolbar',
           queryParamsType: 'pageSize',
           pageList: '[10, 25, 50, 100]',
-          pageSize: 10,
+          pageSize: (localStorage && localStorage.getItem("ProjectFindingsPageSize") !== null) ? Number(localStorage.getItem("ProjectFindingsPageSize")) : 10,
+          sortName: (localStorage && localStorage.getItem("ProjectFindingsSortName") !== null) ? localStorage.getItem("ProjectFindingsSortName") : undefined,
+          sortOrder: (localStorage && localStorage.getItem("ProjectFindingsSortOrder") !== null) ? localStorage.getItem("ProjectFindingsSortOrder") : undefined,
           icons: {
             detailOpen: 'fa-fw fa-angle-right',
             detailClose: 'fa-fw fa-angle-down',
@@ -445,7 +450,23 @@
             res.total = xhr.getResponseHeader("X-Total-Count");
             return res;
           },
-          url: this.apiUrl()
+          url: this.apiUrl(),
+          onPageChange: ((number, size) => {
+            if (localStorage) {
+              localStorage.setItem("ProjectFindingsPageSize", size.toString())
+            }
+          }),
+          onColumnSwitch: ((field, checked) => {
+            if (localStorage) {
+              localStorage.setItem("ProjectFindingsShow"+common.capitalize(field), checked.toString())
+            }
+          }),
+          onSort: ((name, order) => {
+            if (localStorage) {
+              localStorage.setItem("ProjectFindingsSortName", name);
+              localStorage.setItem("ProjectFindingsSortOrder", order);
+            }
+          })
         }
       };
     },
@@ -530,6 +551,7 @@
         });
       },
       tableLoaded: function(data) {
+        loadUserPreferencesForBootstrapTable(this, "ProjectFindings", this.$refs.table.columns);
         this.$emit('total', data.total);
       },
       initializeTooltips: function () {
@@ -540,6 +562,9 @@
     },
     watch:{
       showSuppressedFindings() {
+        if (localStorage) {
+          localStorage.setItem("ProjectFindingsShowSuppressedFindings", this.showSuppressedFindings.toString());
+        }
         this.refreshTable();
       }
     },
