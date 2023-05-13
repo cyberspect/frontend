@@ -147,7 +147,8 @@ export default {
         this.oidcUserManager.settings.scope
     },
     checkOidcAvailability() {
-      if (!this.isOidcAvailableInFrontend()) {
+      var urlParams = new URLSearchParams(window.location.search);           
+      if (urlParams.get("redirect") === "/admin" || !this.isOidcAvailableInFrontend()) {
         return Promise.resolve(false);
       }
 
@@ -186,10 +187,8 @@ export default {
   mounted() {
     this.checkOidcAvailability()
       .then(oidcAvailable => {
-        this.oidcAvailable = oidcAvailable;
-
-        var urlParams = new URLSearchParams(window.location.search);           
-        if (!oidcAvailable || urlParams.get("redirect") === "/admin") {
+        this.oidcAvailable = oidcAvailable;         
+        if (!oidcAvailable) {
           return;
         }
 
