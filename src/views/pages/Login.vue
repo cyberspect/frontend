@@ -188,20 +188,16 @@ export default {
       .then(oidcAvailable => {
         this.oidcAvailable = oidcAvailable;
 
-        if (!oidcAvailable) {
+        var urlParams = new URLSearchParams(window.location.search);           
+        if (!oidcAvailable || urlParams.get("redirect") === "/admin") {
           return;
         }
 
         this.oidcUserManager.getUser().then(oidcUser => {
           // oidcUser will only be set when coming from oidc-callback.html
           if (oidcUser === null) {
-            var urlParams = new URLSearchParams(window.location.search);           
-            if (urlParams.get("redirect") === "/admin") {
-              return;  
-            } else {
-              this.oidcLogin();
-              return;
-            }
+            this.oidcLogin();
+            return;
           }
 
           // Exchange OAuth2 Access Token for a JWT issued by Dependency-Track
