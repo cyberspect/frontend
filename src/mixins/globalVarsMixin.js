@@ -30,6 +30,8 @@ export default {
     } else {
       this.cyberspect = { homeUrl: `${Vue.prototype.$cyberspect.HOME_URL}`};
     }
+    console.log(`${Vue.prototype.$cyberspect.HOME_URL}`);
+    console.log(this.cyberspect);
   },
   mounted() {
     EventBus.$on('profileUpdated', () => {
