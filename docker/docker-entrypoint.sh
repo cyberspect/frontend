@@ -13,7 +13,8 @@ else
         | .OIDC_CLIENT_ID = env.OIDC_CLIENT_ID
         | .OIDC_SCOPE = env.OIDC_SCOPE
         | .OIDC_FLOW = env.OIDC_FLOW
-        | .OIDC_LOGIN_BUTTON_TEXT = env.OIDC_LOGIN_BUTTON_TEXT' \
+        | .OIDC_LOGIN_BUTTON_TEXT = env.OIDC_LOGIN_BUTTON_TEXT
+        | .CYBERSPECT_HOME_URL = env.CYBERSPECT_HOME_URL' \
     ./static/config.json > /tmp/config.json
 
   # Override default config file

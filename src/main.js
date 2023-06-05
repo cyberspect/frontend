@@ -18,6 +18,7 @@ import '@/directives/VuePermission'
 import VueToastr from "vue-toastr";
 import api from "./shared/api.json";
 import oidc from "./shared/oidc.json";
+import cyberspect from "./shared/cyberspect.json";
 import version from "./version";
 import { getContextPath } from "./shared/utils";
 
@@ -35,6 +36,7 @@ Vue.use(VuePageTitle, { prefix: 'Dependency-Track -', router });
 
 Vue.prototype.$api = api;
 Vue.prototype.$oidc = oidc;
+Vue.prototype.$cyberspect = cyberspect;
 const contextPath = getContextPath();
 axios.get(contextPath + "/static/config.json").then(response => {
   if (response.data.API_BASE_URL && response.data.API_BASE_URL !== "") {
@@ -56,6 +58,9 @@ axios.get(contextPath + "/static/config.json").then(response => {
   } else {
     Vue.prototype.$oidc.LOGIN_BUTTON_TEXT = "";
   }
+
+  // Cyberspect
+  Vue.prototype.$cyberspect.HOME_URL = response.data.HOME_URL;
   createVueApp();
 }).catch(function (error) {
   console.log("Cannot retrieve static/config.json from host. This is expected behavior in development environments.");
