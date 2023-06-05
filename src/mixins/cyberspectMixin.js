@@ -3,14 +3,14 @@ import Vue from 'vue';
 export default {
   data () {
     return {
-      cyberspect: Object
+      homeUrl: String
     }
   },
   created() {
-    if (this.$cyberspect) {
-      this.cyberspect = this.$cyberspect;
+    if (this.$homeUrl) {
+      this.homeUrl = this.$homeUrl;
     } else {
-      this.cyberspect = Vue.prototype.$cyberspect;
+      this.homeUrl = `${Vue.prototype.$cyberspect.HOME_URL}`;
     }
   }
 }
