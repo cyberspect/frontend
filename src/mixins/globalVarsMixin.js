@@ -6,7 +6,8 @@ export default {
   data () {
     return {
       dtrack: Object,
-      currentUser: Object
+      currentUser: Object,
+      cyberspect: Object
     }
   },
   created() {
@@ -23,6 +24,11 @@ export default {
       this.currentUser = this.$currentUser;
     } else {
       EventBus.$emit('profileUpdated');
+    }
+    if (this.$cyberspect) {
+      this.cyberspect = this.$cyberspect;
+    } else {
+      this.cyberspect = { homeUrl: `${Vue.prototype.$cyberspect.HOME_URL}`};
     }
   },
   mounted() {
