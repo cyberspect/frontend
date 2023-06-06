@@ -60,7 +60,7 @@ axios.get(contextPath + "/static/config.json").then(response => {
   }
 
   // Cyberspect
-  Vue.prototype.$cyberspect.HOME_URL = response.data.HOME_URL;
+  Vue.prototype.$cyberspect.HOME_URL = response.data.CYBERSPECT_HOME_URL;
   createVueApp();
 }).catch(function (error) {
   console.log("Cannot retrieve static/config.json from host. This is expected behavior in development environments.");
