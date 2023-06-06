@@ -28,9 +28,9 @@ export default {
     if (this.$cyberspect) {
       this.cyberspect = this.$cyberspect;
     } else {
-      this.cyberspect = { homeUrl: `${Vue.prototype.$cyberspect.HOME_URL}`};
+      this.cyberspect = Vue.prototype.$cyberspect;
     }
-    console.log(`${Vue.prototype.$cyberspect.HOME_URL}`);
+    console.log(Vue.prototype.$cyberspect);
     console.log(this.cyberspect);
   },
   mounted() {
