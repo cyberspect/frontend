@@ -59,16 +59,16 @@
 </template>
 
 <script>
-  import { Switch as cSwitch } from '@coreui/vue';
-  import common from "../../../shared/common";
-  import bootstrapTableMixin from "../../../mixins/bootstrapTableMixin";
-  import xssFilters from "xss-filters";
-  import i18n from "../../../i18n";
-  import permissionsMixin from "../../../mixins/permissionsMixin";
-  import BootstrapToggle from 'vue-bootstrap-toggle';
-  import ProjectUploadVexModal from "@/views/portfolio/projects/ProjectUploadVexModal";
-  import $ from "jquery";
-  import {loadUserPreferencesForBootstrapTable} from "@/shared/utils";
+import { compareVersions, loadUserPreferencesForBootstrapTable } from "@/shared/utils";
+import ProjectUploadVexModal from "@/views/portfolio/projects/ProjectUploadVexModal";
+import { Switch as cSwitch } from '@coreui/vue';
+import $ from "jquery";
+import BootstrapToggle from 'vue-bootstrap-toggle';
+import xssFilters from "xss-filters";
+import i18n from "../../../i18n";
+import bootstrapTableMixin from "../../../mixins/bootstrapTableMixin";
+import permissionsMixin from "../../../mixins/permissionsMixin";
+import common from "../../../shared/common";
 
   export default {
     props: {
@@ -110,10 +110,13 @@
             sortable: true,
             formatter(value, row, index) {
               if (Object.prototype.hasOwnProperty.call(row.component, "latestVersion")) {
-                if (row.component.latestVersion !== row.component.version) {
+                if (compareVersions(row.component.latestVersion, row.component.version) > 0) {
                   return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Risk: Outdated component. Current version is: '+ xssFilters.inHTMLData(row.component.latestVersion) + '"><i class="fa fa-exclamation-triangle status-warning" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
+                } else if (compareVersions(row.component.latestVersion, row.component.version) < 0) {
+                  // should be unstable then
+                  return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Risk: Unstable component. Current stable version is: '+ xssFilters.inHTMLData(row.component.latestVersion) + '"><i class="fa fa-exclamation-circle" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
                 } else {
-                  return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Component version is the latest available from the configured repositories"><i class="fa fa-exclamation-triangle status-passed" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
+                  return '<span style="float:right" data-toggle="tooltip" data-placement="bottom" title="Component version is the latest available from the configured repositories"><i class="fa fa-check status-passed" aria-hidden="true"></i></span> ' + xssFilters.inHTMLData(row.component.version);
                 }
               } else {
                 return xssFilters.inHTMLData(common.valueWithDefault(value, ""));
@@ -249,7 +252,7 @@
                     <label>Aliases</label>
                       <b-card class="font-weight-bold">
                         <b-card-text>
-                          <span v-for="alias in resolveVulnAliases(finding.vulnerability.aliases)">
+                          <span v-for="alias in resolveVulnAliases(finding.vulnerability.aliases, finding.vulnerability.source)">
                           <b-link style="margin-right:1.0rem" :href="'/vulnerabilities/' + alias.source + '/' + alias.vulnId">{{ alias.vulnId }}</b-link>
                           </span>
                         </b-card-text>
@@ -365,8 +368,8 @@
               },
               mixins: [permissionsMixin],
               methods: {
-                resolveVulnAliases: function(aliases) {
-                  return common.resolveVulnAliases(this.source, aliases);
+                resolveVulnAliases: function(aliases, vulnSource) {
+                  return common.resolveVulnAliases(vulnSource ? vulnSource : this.source, aliases);
                 },
                 getAnalysis: function() {
                   let queryString = "?project=" + projectUuid + "&component=" + this.finding.component.uuid + "&vulnerability=" + this.finding.vulnerability.uuid;
@@ -548,6 +551,7 @@
       refreshTable: function() {
         this.$refs.table.refresh({
           url: this.apiUrl(),
+          pageNumber: 1,
           silent: true
         });
       },
