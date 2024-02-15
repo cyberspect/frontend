@@ -18,14 +18,14 @@
 </template>
 
 <script>
-  import xssFilters from "xss-filters";
-  import common from "../../../shared/common";
-  import RepositoryCreateRepositoryModal from "./RepositoryCreateRepositoryModal";
-  import i18n from "../../../i18n";
-  import bootstrapTableMixin from "../../../mixins/bootstrapTableMixin";
-  import { Switch as cSwitch } from '@coreui/vue';
-  import EventBus from "../../../shared/eventbus";
-  import BValidatedInputGroupFormInput from "../../../forms/BValidatedInputGroupFormInput";
+import { Switch as cSwitch } from '@coreui/vue';
+import xssFilters from "xss-filters";
+import BValidatedInputGroupFormInput from "../../../forms/BValidatedInputGroupFormInput";
+import i18n from "../../../i18n";
+import bootstrapTableMixin from "../../../mixins/bootstrapTableMixin";
+import common from "../../../shared/common";
+import EventBus from "../../../shared/eventbus";
+import RepositoryCreateRepositoryModal from "./RepositoryCreateRepositoryModal";
 
   export default {
     props: {
@@ -43,6 +43,7 @@
       refreshTable: function() {
         this.$refs.table.refresh({
           url: this.apiUrl(),
+          pageNumber: 1,
           silent: true
         });
       }
@@ -89,6 +90,15 @@
             },
           },
           {
+                      title: this.$t('admin.repository_authentication'),
+                      field: "authenticationRequired",
+                      class: "tight",
+                      sortable: true,
+                      formatter(value, row, index) {
+                        return value === true ? '<i class="fa fa-check-square-o" />' : "";
+                      },
+                    },
+          {
             title: this.$t('admin.enabled'),
             field: "enabled",
             class: "tight",
@@ -133,13 +143,17 @@
                     <div>
                       <c-switch color="primary" v-model="internal" label v-bind="labelIcon" />{{$t('admin.internal')}}
                     </div>
+                    <div>
+                     <c-switch color="primary" v-model="authenticationRequired" label v-bind="labelIcon" />{{$t('admin.repository_authentication')}}
+                    </div>
 
                     <div>
                       <b-validated-input-group-form-input
                         id="username" :label="$t('admin.username')"
                         input-group-size="mb-3"
                         v-model="username"
-                        v-show="internal"
+                        rules="required"
+                        v-show="authenticationRequired"
                         v-debounce:750ms="updateRepository" :debounce-events="'keyup'"/>
                     </div>
 
@@ -147,8 +161,10 @@
                       <b-validated-input-group-form-input
                         id="password" :label="$t('admin.password')"
                         input-group-size="mb-3"
+                        type="password"
                         v-model="password"
-                        v-show="internal"
+                        rules="required"
+                        v-show="authenticationRequired"
                         v-debounce:750ms="updateRepository" :debounce-events="'keyup'"/>
                     </div>
 
@@ -172,8 +188,9 @@
                   identifier: row.identifier,
                   url: row.url,
                   internal: row.internal,
+                  authenticationRequired: row.authenticationRequired,
                   username: row.username,
-                  password: row.password || null,
+                  password: row.password || "HiddenDecryptedPropertyPlaceholder",
                   enabled: row.enabled,
                   uuid: row.uuid,
                   labelIcon: {
@@ -188,7 +205,12 @@
                 },
                 enabled() {
                   this.updateRepository();
+                },
+                authenticationRequired(){
+
+                this.updateRepository();
                 }
+
               },
               methods: {
                 deleteRepository: function() {
@@ -206,8 +228,9 @@
                     identifier: this.identifier,
                     url: this.url,
                     internal: this.internal,
+                    authenticationRequired: this.authenticationRequired,
                     username: this.username,
-                    password: this.password || null,
+                    password: this.password || "HiddenDecryptedPropertyPlaceholder",
                     enabled: this.enabled,
                     uuid: this.uuid
                   }).then((response) => {
