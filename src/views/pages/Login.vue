@@ -183,8 +183,11 @@ export default {
       );
     },
     checkOidcAvailability() {
-      var urlParams = new URLSearchParams(window.location.search);           
-      if (urlParams.get("redirect") === "/dashboard?admin" || !this.isOidcAvailableInFrontend()) {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (
+        urlParams.get('redirect') === '/dashboard?admin' ||
+        !this.isOidcAvailableInFrontend()
+      ) {
         return Promise.resolve(false);
       }
 

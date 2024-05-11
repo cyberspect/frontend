@@ -2,9 +2,9 @@
   <AppHeader fixed>
     <SidebarToggler class="d-lg-none" display="md" mobile />
     <a v-bind:href="cyberspect.HOME_URL">
-      <img 
+      <img
         class="d-lg-inline d-md-none d-sm-none bv-d-xs-down-none"
-        style="margin-left:10px"
+        style="margin-left: 10px"
         src="@/assets/img/brand/dt-logo-symbol.svg"
         width="30"
         height="30"
@@ -20,7 +20,7 @@
 <script>
 import { Header as AppHeader, SidebarToggler, AsideToggler } from '@coreui/vue';
 import DefaultHeaderProfileDropdown from './DefaultHeaderProfileDropdown';
-import globalVarsMixin from "../mixins/globalVarsMixin";
+import globalVarsMixin from '../mixins/globalVarsMixin';
 
 export default {
   name: 'DefaultHeader',
