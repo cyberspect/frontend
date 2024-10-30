@@ -30,6 +30,7 @@
             class="list-group-item list-group-item-action"
             data-toggle="list"
             role="tab"
+            :hidden="item.hidden"
             :to="'/admin/' + item.route"
             @click="emitEvent(item)"
             >{{ item.name }}</router-link
@@ -96,6 +97,11 @@ export default {
               route: 'configuration/email',
             },
             {
+              component: 'WelcomeMessage',
+              name: this.$t('admin.welcome_message'),
+              route: 'configuration/welcomeMessage',
+            },
+            {
               component: 'InternalComponents',
               name: this.$t('admin.internal_components'),
               route: 'configuration/internalComponents',
@@ -114,6 +120,7 @@ export default {
               component: 'Experimental',
               name: this.$t('admin.experimental'),
               route: 'configuration/experimental',
+              hidden: true,
             },
           ],
         },
