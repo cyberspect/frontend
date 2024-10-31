@@ -1,16 +1,6 @@
 on:
   workflow_call:
     inputs:
-      node-versions:
-        type: string
-        required: false
-        default: '["18"]'
-        description: 'Stringified JSON Array of node versions to build against'
-      node-version-package:
-        type: string
-        required: false
-        default: '18'
-        description: 'Set which version of node the container packaged dist should be based on. (MUST be part of the node-versions)'
       app-version:
         type: string
         required: false
@@ -35,19 +25,14 @@ jobs:
   build-node:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: true
-      matrix:
-        node-version: ${{ fromJson(inputs.node-versions) }}
-
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.2.0
 
       - name: Set up NodeJs
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@v4.0.4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '20'
           cache: 'npm'
 
       - name: Run Npm Build
@@ -58,9 +43,9 @@ jobs:
           npm run build --if-present
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.6
         with:
-          name: assembled-frontend-node${{ matrix.node-version }}
+          name: assembled-frontend
           path: |-
             dist/
             bom.*
@@ -72,24 +57,24 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.2.0
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
-          name: assembled-frontend-node${{ inputs.node-version-package }}
+          name: assembled-frontend
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.0.0
+        uses: docker/setup-qemu-action@v3.2.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.3.0
+        uses: docker/setup-buildx-action@v3.6.1
         id: buildx
         with:
           install: true
 
       - name: Login to Docker.io
-        uses: docker/login-action@v3.1.0
+        uses: docker/login-action@v3.3.0
         if: ${{ inputs.publish-container }}
         with:
           registry: docker.io
@@ -114,7 +99,7 @@ jobs:
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: Build multi-arch Container Image
-        uses: docker/build-push-action@v5.3.0
+        uses: docker/build-push-action@v6.9.0
         with:
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |-
@@ -127,7 +112,11 @@ jobs:
 
       - name: Run Trivy Vulnerability Scanner
         if: ${{ inputs.publish-container }}
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.24.0
+        env:
+          # https://github.com/aquasecurity/trivy-action/issues/389
+          TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
+          TRIVY_JAVA_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-java-db:1'
         with:
           image-ref: docker.io/dependencytrack/frontend:${{ inputs.app-version }}
           format: 'sarif'

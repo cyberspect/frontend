@@ -7,15 +7,32 @@
     no-stacking
     :title="$t('message.add_version')"
   >
-    <b-form-group
-      id="fieldset-1"
-      :label="this.$t('message.version')"
-      label-for="input-1"
-      label-class="required"
-    >
-      <b-form-input id="input-1" v-model="version" class="required" trim />
-    </b-form-group>
-
+    <b-row align-v="stretch">
+      <b-col>
+        <b-form-group
+          id="fieldset-1"
+          :label="this.$t('message.version')"
+          label-for="input-1"
+          label-class="required"
+        >
+          <b-form-input
+            id="input-1"
+            v-model="version"
+            class="required"
+            trim
+            required
+          />
+        </b-form-group>
+      </b-col>
+      <b-col cols="auto">
+        <b-input-group-form-switch
+          id="project-details-islatest"
+          :label="$t('message.project_is_latest')"
+          v-model="makeCloneLatest"
+          :show-placeholder-label="true"
+        />
+      </b-col>
+    </b-row>
     <b-form-checkbox
       id="checkbox-1"
       v-model="includeTags"
@@ -97,16 +114,23 @@
       <b-button size="md" variant="secondary" @click="cancel()">{{
         $t('message.cancel')
       }}</b-button>
-      <b-button size="md" variant="primary" @click="createVersion()">{{
-        $t('message.create')
-      }}</b-button>
+      <b-button
+        size="md"
+        variant="primary"
+        :disabled="isSubmitButtonDisabled"
+        @click="createVersion()"
+        >{{ $t('message.create') }}</b-button
+      >
     </template>
   </b-modal>
 </template>
 
 <script>
+import BInputGroupFormSwitch from '@/forms/BInputGroupFormSwitch.vue';
+
 export default {
   name: 'ProjectAddVersionModal',
+  components: { BInputGroupFormSwitch },
   props: {
     uuid: String,
   },
@@ -120,7 +144,22 @@ export default {
       includeAuditHistory: true,
       includeACL: true,
       includePolicyViolations: true,
+      makeCloneLatest: false,
     };
+  },
+  computed: {
+    isSubmitButtonDisabled() {
+      const versionInputValue = this.version;
+      if (versionInputValue) {
+        /**
+         * * ideally we would apply the check with the input value trimmed, however, since we are already using 'trim' prop on the input value.
+         * * trimming the value here is not required.
+         */
+        return versionInputValue.length === 0;
+      }
+
+      return true;
+    },
   },
   methods: {
     createVersion: function () {
@@ -136,6 +175,7 @@ export default {
           includeAuditHistory: this.includeAuditHistory,
           includeACL: this.includeACL,
           includePolicyViolations: this.includePolicyViolations,
+          makeCloneLatest: this.makeCloneLatest,
         })
         .then((response) => {
           this.$root.$emit('bv::hide::modal', 'projectAddVersionModal');
@@ -154,6 +194,7 @@ export default {
       this.includeAuditHistory = true;
       this.includeACL = true;
       this.includePolicyViolations = true;
+      this.makeCloneLatest = false;
     },
   },
 };
