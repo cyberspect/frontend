@@ -118,7 +118,7 @@ export default {
   },
   methods: {
     apiUrl: function () {
-      let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/source/${this.source}/vuln/${this.vulnId}/projects`;
+      let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/source/${this.source}/vuln/${encodeURIComponent(this.vulnId)}/projects`;
       if (this.showInactiveProjects === undefined) {
         url += '?excludeInactive=true';
       } else {
@@ -151,6 +151,10 @@ export default {
       this.$refs.table.showLoading();
       this.currentPage = 1;
       this.refreshTable();
+    },
+    vulnId() {
+      // update url when vulnId changes, will trigger table refresh
+      this.$refs.table.refreshOptions({...this.options, url: this.apiUrl()});
     },
   },
 };
