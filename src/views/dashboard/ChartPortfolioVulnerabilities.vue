@@ -16,6 +16,9 @@ export default {
       const mediumStyle = getStyle('--severity-medium');
       const lowStyle = getStyle('--severity-low');
       const unassignedStyle = getStyle('--severity-unassigned');
+      const collectionLogicChangedStyle = getStyle(
+        '--collection-logic-changed',
+      );
 
       let labels = [];
       let criticalData = [];
@@ -23,17 +26,19 @@ export default {
       let mediumData = [];
       let lowData = [];
       let unassignedData = [];
+      let collectionLogicChangedData = [];
 
       for (let i = 0; i < metrics.length; i++) {
-        labels.push(common.formatTimestamp(metrics[i].firstOccurrence));
+        labels.push(metrics[i].firstOccurrence);
         criticalData.push(metrics[i].critical);
         highData.push(metrics[i].high);
         mediumData.push(metrics[i].medium);
         lowData.push(metrics[i].low);
         unassignedData.push(metrics[i].unassigned);
+        collectionLogicChangedData.push(metrics[i].collectionLogicChanged);
 
         if (i === metrics.length - 1) {
-          labels.push(common.formatTimestamp(metrics[i].lastOccurrence));
+          labels.push(metrics[i].lastOccurrence);
           criticalData.push(metrics[i].critical);
           highData.push(metrics[i].high);
           mediumData.push(metrics[i].medium);
@@ -81,6 +86,23 @@ export default {
               pointHoverBackgroundColor: '#fff',
               data: unassignedData,
             },
+            {
+              label: this.$t('message.collection_logic_changed'),
+              backgroundColor: 'transparent',
+              borderColor: collectionLogicChangedStyle,
+              showLine: false,
+              pointBorderColor: (context) => {
+                const value = context.dataset.data[context.dataIndex];
+                return value === true
+                  ? collectionLogicChangedStyle
+                  : 'transparent';
+              },
+              pointBorderWidth: 400,
+              pointHoverBorderWidth: 400,
+              data: collectionLogicChangedData,
+              pointStyle: 'line',
+              pointRadius: 1,
+            },
           ],
         },
         {
@@ -97,6 +119,12 @@ export default {
                     chart.data.datasets[tooltipItem.datasetIndex].borderColor,
                 };
               },
+              title: function (tooltipItems, data) {
+                return common.formatTimestamp(
+                  data.labels[tooltipItems[0].index],
+                  true,
+                );
+              },
             },
           },
           maintainAspectRatio: false,
@@ -108,6 +136,13 @@ export default {
               {
                 gridLines: {
                   drawOnChartArea: false,
+                },
+                ticks: {
+                  callback: function (value, index) {
+                    return common.formatTimestamp(
+                      this.chart.data.labels[index],
+                    );
+                  },
                 },
               },
             ],
