@@ -165,6 +165,11 @@
     "mapped_ldap_groups": "Groupes LDAP associés",
     "mapped_oidc_groups": "Groupes OpenID Connect associés",
     "mapped_teams": "Équipes associées",
+    "match_mode": {
+      "and": "Faire correspondre à la fois l'espace de noms et le nom",
+      "label": "Mode de correspondance des composants",
+      "or": "Correspondre à l'espace de noms ou au nom"
+    },
     "maven": "Maven",
     "members": "Membres",
     "mime_type": "Type MIME",
@@ -339,7 +344,8 @@
     "pt": "Portugais (Portugal)",
     "pt-BR": "Portugais (Brésil)",
     "ru": "Russe",
-    "zh": "Chinois"
+    "zh": "Chinois",
+    "zh-TW": "Chinois (Taïwan)"
   },
   "message": {
     "about": "À propos",
@@ -464,8 +470,10 @@
     "custom_license_deleted": "Licence personnalisée supprimée",
     "cvss": "CVSS",
     "cvss_access_complexity": "Complexité de l'accès",
+    "cvss_active": null,
     "cvss_adjacent": "Adjacent",
     "cvss_attack_complexity": "Complexité de l'attaque",
+    "cvss_attack_requirements": null,
     "cvss_attack_vector": "Vecteur d'attaque",
     "cvss_authentication": "Authentification",
     "cvss_availability_impact": "Impact sur la disponibilité",
@@ -487,18 +495,28 @@
     "cvss_network": "Réseau",
     "cvss_none": "Aucun(e)",
     "cvss_partial": "Partiel",
+    "cvss_passive": null,
     "cvss_physical": "Physique",
+    "cvss_present": null,
     "cvss_privileges_required": "Privilèges requis",
     "cvss_required": "Obligatoire",
     "cvss_scope": "Périmètre",
     "cvss_single": "Simple",
     "cvss_source": "Sélectionner la priorité de la source pour CVSS",
+    "cvss_sub_availability_impact": null,
+    "cvss_sub_confidentiality_impact": null,
+    "cvss_sub_integrity_impact": null,
     "cvss_unchanged": "Inchangée",
     "cvss_user_interaction": "Interaction de l'utilisateur",
     "cvss_v2": "CVSSv2",
     "cvss_v2_vector": "Vecteur CVSSv2",
     "cvss_v3": "CVSSv3",
     "cvss_v3_vector": "Vecteur CVSSv3",
+    "cvss_v4": null,
+    "cvss_v4_vector": null,
+    "cvss_vuln_availability_impact": null,
+    "cvss_vuln_confidentiality_impact": null,
+    "cvss_vuln_integrity_impact": null,
     "cwe": "CWE",
     "cwe_full": "Common Weakness Enumeration (CWE)",
     "cwe_id": "Identifiant CWE",
@@ -568,6 +586,7 @@
     "include_tags": "Inclure des balises",
     "inherited_risk_score": "Score de risque hérité",
     "internal": "Interne",
+    "internal_status": "Component classified as internal",
     "inventory": "Inventaire",
     "inventory_with_vulnerabilities": "Inventaire avec vulnérabilités",
     "justification": "Justification",
@@ -815,6 +834,7 @@
     "risk_score": "Score de risque",
     "risk_type": "Type de risque",
     "rollback": "Retour en arriere",
+    "scope": "Porté",
     "search": "Recherche",
     "search_parent": "Rechercher un parent",
     "security_risk": "Risque de sécurité",
@@ -962,10 +982,10 @@
     "warn": "Avertissement"
   },
   "vulnerability": {
-    "critical": "Vulnérabilités critiques",
-    "high": "Vulnérabilités de haute criticité",
-    "low": "Vulnérabilités de faible criticité",
-    "medium": "Vulnérabilités de criticité moyenne",
-    "unassigned": "Vulnérabilités non attribuées"
+    "critical": "Vulnérabilités critiques (alias exclus)",
+    "high": "Vulnérabilités de haute criticité (alias exclus)",
+    "low": "Vulnérabilités de faible criticité (alias exclus)",
+    "medium": "Vulnérabilités de criticité moyenne (alias exclus)",
+    "unassigned": "Vulnérabilités non attribuées (alias exclus)"
   }
 }

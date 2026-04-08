@@ -165,6 +165,11 @@
     "mapped_ldap_groups": "मैप किए गए LDAP समूह",
     "mapped_oidc_groups": "मैप किए गए OpenID कनेक्ट समूह",
     "mapped_teams": "मैप की गई टीमें",
+    "match_mode": {
+      "and": "नामस्थान और नाम दोनों का मिलान करें",
+      "label": "घटक मिलान विधा",
+      "or": "नेमस्पेस या नाम का मिलान करें"
+    },
     "maven": "मावेन",
     "members": "सदस्यों",
     "mime_type": "माइम प्रकार",
@@ -339,7 +344,8 @@
     "pt": "पुर्तगाली (पुर्तगाल)",
     "pt-BR": "पुर्तगाली (ब्राजील)",
     "ru": "रूसी",
-    "zh": "चीनी"
+    "zh": "चीनी",
+    "zh-TW": "चीनी (ताइवान)"
   },
   "message": {
     "about": "के बारे में",
@@ -464,8 +470,10 @@
     "custom_license_deleted": "कस्टम लाइसेंस हटाया गया",
     "cvss": "सीवीएसएस",
     "cvss_access_complexity": "पहुँच जटिलता",
+    "cvss_active": null,
     "cvss_adjacent": "आसन्न",
     "cvss_attack_complexity": "हमले की जटिलता",
+    "cvss_attack_requirements": null,
     "cvss_attack_vector": "आक्रमण वेक्टर",
     "cvss_authentication": "प्रमाणीकरण",
     "cvss_availability_impact": "उपलब्धता प्रभाव",
@@ -487,18 +495,28 @@
     "cvss_network": "नेटवर्क",
     "cvss_none": "कोई नहीं",
     "cvss_partial": "आंशिक",
+    "cvss_passive": null,
     "cvss_physical": "भौतिक",
+    "cvss_present": null,
     "cvss_privileges_required": "आवश्यक विशेषाधिकार",
     "cvss_required": "आवश्यक",
     "cvss_scope": "दायरा",
     "cvss_single": "एकल",
     "cvss_source": "CVSS के लिए स्रोत प्राथमिकता चुनें",
+    "cvss_sub_availability_impact": null,
+    "cvss_sub_confidentiality_impact": null,
+    "cvss_sub_integrity_impact": null,
     "cvss_unchanged": "अपरिवर्तित",
     "cvss_user_interaction": "उपयोगकर्ता संपर्क",
     "cvss_v2": "सीवीएससवी2",
     "cvss_v2_vector": "CVSSv2 वेक्टर",
     "cvss_v3": "सीवीएससवी3",
     "cvss_v3_vector": "CVSSv3 वेक्टर",
+    "cvss_v4": null,
+    "cvss_v4_vector": null,
+    "cvss_vuln_availability_impact": null,
+    "cvss_vuln_confidentiality_impact": null,
+    "cvss_vuln_integrity_impact": null,
     "cwe": "सीडब्ल्यूई",
     "cwe_full": "सामान्य कमज़ोरी गणना (CWE)",
     "cwe_id": "सीडब्ल्यूई आईडी",
@@ -568,6 +586,7 @@
     "include_tags": "टैग शामिल करें",
     "inherited_risk_score": "वंशानुगत जोखिम स्कोर",
     "internal": "आंतरिक",
+    "internal_status": "Component classified as internal",
     "inventory": "भंडार",
     "inventory_with_vulnerabilities": "कमज़ोरियों वाली सूची",
     "justification": "औचित्य",
@@ -815,6 +834,7 @@
     "risk_score": "जोखिम स्कोर",
     "risk_type": "जोखिम का प्रकार",
     "rollback": "रोलबैक",
+    "scope": "दायरा",
     "search": "खोज",
     "search_parent": "माता-पिता को खोजने के लिए टाइप करें",
     "security_risk": "सुरक्षा मे जोखिम",
@@ -962,10 +982,10 @@
     "warn": "चेतावनी देना"
   },
   "vulnerability": {
-    "critical": "गंभीर गंभीरता की कमज़ोरियाँ",
-    "high": "उच्च गंभीरता वाली कमज़ोरियाँ",
-    "low": "कम गंभीरता वाली कमज़ोरियाँ",
-    "medium": "मध्यम गंभीरता की कमज़ोरियाँ",
-    "unassigned": "असाइन न की गई कमज़ोरियाँ"
+    "critical": "गंभीर गंभीरता की कमज़ोरियाँ (उपनाम को छोड़कर)",
+    "high": "उच्च गंभीरता वाली कमज़ोरियाँ (उपनाम को छोड़कर)",
+    "low": "कम गंभीरता वाली कमज़ोरियाँ (उपनाम को छोड़कर)",
+    "medium": "मध्यम गंभीरता की कमज़ोरियाँ (उपनाम को छोड़कर)",
+    "unassigned": "असाइन न की गई कमज़ोरियाँ (उपनाम को छोड़कर)"
   }
 }
