@@ -165,6 +165,11 @@
     "mapped_ldap_groups": "Mapowane grupy LDAP",
     "mapped_oidc_groups": "Mapowane grupy połączeń OpenID",
     "mapped_teams": "Mapowane zespoły",
+    "match_mode": {
+      "and": "Dopasuj zarówno przestrzeń nazw, jak i nazwę",
+      "label": "Tryb dopasowywania komponentów",
+      "or": "Dopasuj przestrzeń nazw lub nazwę"
+    },
     "maven": "Mavena",
     "members": "Członkowie",
     "mime_type": "Typ mima",
@@ -339,7 +344,8 @@
     "pt": "Portugalski (Portugalia)",
     "pt-BR": "Portugalski (Brazylia)",
     "ru": "Rosyjski",
-    "zh": "Chiński"
+    "zh": "Chiński",
+    "zh-TW": "Chiński (Tajwan)"
   },
   "message": {
     "about": "O",
@@ -464,8 +470,10 @@
     "custom_license_deleted": "Usunięto licencję niestandardową",
     "cvss": "CVSS",
     "cvss_access_complexity": "Złożoność dostępu",
+    "cvss_active": null,
     "cvss_adjacent": "Sąsiadujący",
     "cvss_attack_complexity": "Złożoność ataku",
+    "cvss_attack_requirements": null,
     "cvss_attack_vector": "Wektor ataku",
     "cvss_authentication": "Uwierzytelnianie",
     "cvss_availability_impact": "Wpływ na dostępność",
@@ -487,18 +495,28 @@
     "cvss_network": "Sieć",
     "cvss_none": "Brak",
     "cvss_partial": "Częściowe",
+    "cvss_passive": null,
     "cvss_physical": "Fizyczne",
+    "cvss_present": null,
     "cvss_privileges_required": "Wymagane uprawnienia",
     "cvss_required": "Wymagane",
     "cvss_scope": "Zakres",
     "cvss_single": "Pojedynczy",
     "cvss_source": "Wybierz priorytet źródła dla CVSS",
+    "cvss_sub_availability_impact": null,
+    "cvss_sub_confidentiality_impact": null,
+    "cvss_sub_integrity_impact": null,
     "cvss_unchanged": "Bez zmian",
     "cvss_user_interaction": "Interakcja z użytkownikiem",
     "cvss_v2": "CVSSv2",
     "cvss_v2_vector": "Wektor CVSSv2",
     "cvss_v3": "CVSSv3",
     "cvss_v3_vector": "Wektor CVSSv3",
+    "cvss_v4": null,
+    "cvss_v4_vector": null,
+    "cvss_vuln_availability_impact": null,
+    "cvss_vuln_confidentiality_impact": null,
+    "cvss_vuln_integrity_impact": null,
     "cwe": "CWE",
     "cwe_full": "Wyliczenie typowych słabych stron (CWE)",
     "cwe_id": "Identyfikator CWE",
@@ -568,6 +586,7 @@
     "include_tags": "Dołącz tagi",
     "inherited_risk_score": "Odziedziczona ocena ryzyka",
     "internal": "Wewnętrzny",
+    "internal_status": "Component classified as internal",
     "inventory": "Spis",
     "inventory_with_vulnerabilities": "Inwentarz z lukami w zabezpieczeniach",
     "justification": "Uzasadnienie",
@@ -815,6 +834,7 @@
     "risk_score": "Ocena ryzyka",
     "risk_type": "Rodzaj ryzyka",
     "rollback": "Wycofanie",
+    "scope": "Zakres",
     "search": "Szukaj",
     "search_parent": "Wpisz, aby wyszukać element nadrzędny",
     "security_risk": "Zagrożenie dla bezpieczeństwa",
@@ -962,10 +982,10 @@
     "warn": "Ostrzegać"
   },
   "vulnerability": {
-    "critical": "Luki o krytycznym znaczeniu",
-    "high": "Luki o dużej wadze",
-    "low": "Luki w zabezpieczeniach o niskiej wadze",
-    "medium": "Luki o średniej wadze",
-    "unassigned": "Nieprzypisane luki w zabezpieczeniach"
+    "critical": "Luki o krytycznym znaczeniu (z wyłączeniem aliasów)",
+    "high": "Luki o dużej wadze (z wyłączeniem aliasów)",
+    "low": "Luki w zabezpieczeniach o niskiej wadze (z wyłączeniem aliasów)",
+    "medium": "Luki o średniej wadze (z wyłączeniem aliasów)",
+    "unassigned": "Nieprzypisane luki w zabezpieczeniach (z wyłączeniem aliasów)"
   }
 }

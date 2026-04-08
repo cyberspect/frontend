@@ -165,6 +165,11 @@
     "mapped_ldap_groups": "Mapped LDAP groups",
     "mapped_oidc_groups": "Mapped OpenID Connect Groups",
     "mapped_teams": "Mapped Teams",
+    "match_mode": {
+      "and": "Match both namespace AND name",
+      "label": "Component matching mode",
+      "or": "Match namespace OR name"
+    },
     "maven": "Maven",
     "members": "Members",
     "mime_type": "Mime type",
@@ -339,7 +344,8 @@
     "pt": "Portuguese (Portugal)",
     "pt-BR": "Portuguese (Brazil)",
     "ru": "Russian",
-    "zh": "Chinese"
+    "zh": "Chinese",
+    "zh-TW": "Chinese (Taiwan)"
   },
   "message": {
     "about": "About",
@@ -464,8 +470,10 @@
     "custom_license_deleted": "Custom License Deleted",
     "cvss": "CVSS",
     "cvss_access_complexity": "Access Complexity",
+    "cvss_active": "Active",
     "cvss_adjacent": "Adjacent",
     "cvss_attack_complexity": "Attack Complexity",
+    "cvss_attack_requirements": "Attack Requirements",
     "cvss_attack_vector": "Attack Vector",
     "cvss_authentication": "Authentication",
     "cvss_availability_impact": "Availability Impact",
@@ -487,18 +495,28 @@
     "cvss_network": "Network",
     "cvss_none": "None",
     "cvss_partial": "Partial",
+    "cvss_passive": "Passive",
     "cvss_physical": "Physical",
+    "cvss_present": "Present",
     "cvss_privileges_required": "Privileges Required",
     "cvss_required": "Required",
     "cvss_scope": "Scope",
     "cvss_single": "Single",
     "cvss_source": "Select source priority for CVSS",
+    "cvss_sub_availability_impact": "Subsequent System Availability",
+    "cvss_sub_confidentiality_impact": "Subsequent System Confidentiality",
+    "cvss_sub_integrity_impact": "Subsequent System Integrity",
     "cvss_unchanged": "Unchanged",
     "cvss_user_interaction": "User Interaction",
     "cvss_v2": "CVSSv2",
     "cvss_v2_vector": "CVSSv2 Vector",
     "cvss_v3": "CVSSv3",
     "cvss_v3_vector": "CVSSv3 Vector",
+    "cvss_v4": "CVSSv4",
+    "cvss_v4_vector": "CVSSv4 Vector",
+    "cvss_vuln_availability_impact": "Vulnerable System Availability",
+    "cvss_vuln_confidentiality_impact": "Vulnerable System Confidentiality",
+    "cvss_vuln_integrity_impact": "Vulnerable System Integrity",
     "cwe": "CWE",
     "cwe_full": "Common Weakness Enumeration (CWE)",
     "cwe_id": "CWE ID",
@@ -568,6 +586,7 @@
     "include_tags": "Include tags",
     "inherited_risk_score": "Inherited Risk Score",
     "internal": "Internal",
+    "internal_status": "Component classified as internal",
     "inventory": "Inventory",
     "inventory_with_vulnerabilities": "Inventory with Vulnerabilities",
     "justification": "Justification",
@@ -815,6 +834,7 @@
     "risk_score": "Risk Score",
     "risk_type": "Risk Type",
     "rollback": "Rollback",
+    "scope": "Scope",
     "search": "Search",
     "search_parent": "Type to search parent",
     "security_risk": "Security Risk",
@@ -962,10 +982,10 @@
     "warn": "Warn"
   },
   "vulnerability": {
-    "critical": "Critical Severity Vulnerabilities",
-    "high": "High Severity Vulnerabilities",
-    "low": "Low Severity Vulnerabilities",
-    "medium": "Medium Severity Vulnerabilities",
-    "unassigned": "Unassigned Vulnerabilities"
+    "critical": "Critical Severity Vulnerabilities (excluding aliases)",
+    "high": "High Severity Vulnerabilities (excluding aliases)",
+    "low": "Low Severity Vulnerabilities (excluding aliases)",
+    "medium": "Medium Severity Vulnerabilities (excluding aliases)",
+    "unassigned": "Unassigned Vulnerabilities (excluding aliases)"
   }
 }

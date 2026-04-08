@@ -165,6 +165,11 @@
     "mapped_ldap_groups": "Сопоставленные группы LDAP",
     "mapped_oidc_groups": "Сопоставленные группы OpenID Connect",
     "mapped_teams": "Сопоставленные команды",
+    "match_mode": {
+      "and": "Сопоставьте пространство имен и имя",
+      "label": "Режим сопоставления компонентов",
+      "or": "Сопоставьте пространство имен или имя"
+    },
     "maven": "Maven",
     "members": "Участники",
     "mime_type": "Тип MIME",
@@ -339,7 +344,8 @@
     "pt": "Португальский (Португалия)",
     "pt-BR": "Португальский (Бразилия)",
     "ru": "Русский",
-    "zh": "Китайский"
+    "zh": "Китайский",
+    "zh-TW": "Китайский (Тайвань)"
   },
   "message": {
     "about": "О программе",
@@ -464,8 +470,10 @@
     "custom_license_deleted": "Пользовательская лицензия удалена",
     "cvss": "CVSS",
     "cvss_access_complexity": "Сложность доступа",
+    "cvss_active": null,
     "cvss_adjacent": "Смежный",
     "cvss_attack_complexity": "Сложность атаки",
+    "cvss_attack_requirements": null,
     "cvss_attack_vector": "Вектор атаки",
     "cvss_authentication": "Аутентификация",
     "cvss_availability_impact": "Влияние на доступность",
@@ -487,18 +495,28 @@
     "cvss_network": "Сеть",
     "cvss_none": "Нет",
     "cvss_partial": "Частичный",
+    "cvss_passive": null,
     "cvss_physical": "Физический",
+    "cvss_present": null,
     "cvss_privileges_required": "Требуемые привилегии",
     "cvss_required": "Требуется",
     "cvss_scope": "Область действия",
     "cvss_single": "Одиночный",
     "cvss_source": "Выберите источник для приоритета CVSS",
+    "cvss_sub_availability_impact": null,
+    "cvss_sub_confidentiality_impact": null,
+    "cvss_sub_integrity_impact": null,
     "cvss_unchanged": "Неизменный",
     "cvss_user_interaction": "Взаимодействие с пользователем",
     "cvss_v2": "CVSSv2",
     "cvss_v2_vector": "Вектор CVSSv2",
     "cvss_v3": "CVSSv3",
     "cvss_v3_vector": "Вектор CVSSv3",
+    "cvss_v4": null,
+    "cvss_v4_vector": null,
+    "cvss_vuln_availability_impact": null,
+    "cvss_vuln_confidentiality_impact": null,
+    "cvss_vuln_integrity_impact": null,
     "cwe": "CWE",
     "cwe_full": "Общее описание слабостей (CWE)",
     "cwe_id": "ID CWE",
@@ -568,6 +586,7 @@
     "include_tags": "Включить теги",
     "inherited_risk_score": "Унаследованный рейтинг риска",
     "internal": "Внутренний",
+    "internal_status": "Component classified as internal",
     "inventory": "Инвентарь",
     "inventory_with_vulnerabilities": "Инвентарь с уязвимостями",
     "justification": "Обоснование",
@@ -815,6 +834,7 @@
     "risk_score": "Оценка риска",
     "risk_type": "Тип риска",
     "rollback": "Откат",
+    "scope": "Объем",
     "search": "Поиск",
     "search_parent": "Введите для поиска родителя",
     "security_risk": "Риск безопасности",
@@ -962,10 +982,10 @@
     "warn": "Предупреждение"
   },
   "vulnerability": {
-    "critical": "Уязвимости с критической степенью",
-    "high": "Уязвимости с высокой степенью",
-    "low": "Уязвимости с низкой степенью",
-    "medium": "Уязвимости со средней степенью",
-    "unassigned": "Не назначенные уязвимости"
+    "critical": "Уязвимости с критической степенью (без учёта псевдонимов)",
+    "high": "Уязвимости с высокой степенью (без учёта псевдонимов)",
+    "low": "Уязвимости с низкой степенью (без учёта псевдонимов)",
+    "medium": "Уязвимости со средней степенью (без учёта псевдонимов)",
+    "unassigned": "Не назначенные уязвимости (без учёта псевдонимов)"
   }
 }
