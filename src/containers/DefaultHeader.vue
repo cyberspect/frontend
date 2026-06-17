@@ -21,10 +21,11 @@
 import { Header as AppHeader, SidebarToggler, AsideToggler } from '@coreui/vue';
 import DefaultHeaderProfileDropdown from './DefaultHeaderProfileDropdown';
 import globalVarsMixin from '../mixins/globalVarsMixin';
+import cyberspectMixin from "../mixins/cyberspectMixin";
 
 export default {
   name: 'DefaultHeader',
-  mixins: [globalVarsMixin],
+  mixins: [globalVarsMixin,cyberspectMixin],
   components: {
     AsideToggler,
     AppHeader,
