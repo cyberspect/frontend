@@ -37,6 +37,9 @@ import BToggleableDisplayButton from '../../components/BToggleableDisplayButton'
 import BInputGroupFormInput from '../../../forms/BInputGroupFormInput';
 import VueTagsInput from '@johmun/vue-tags-input';
 import { Switch as cSwitch } from '@coreui/vue';
+import ExtensionConfigForm from '../../components/ExtensionConfigForm';
+import CodeMirrorEditor from '../../components/CodeMirrorEditor';
+import { createCelCompletionSource } from '../../policy/celCompletions';
 
 export default {
   props: {
@@ -51,7 +54,7 @@ export default {
       this.$refs.table.updateRow({ index: index, row: row });
       this.$refs.table.expandRow(index);
     });
-    EventBus.$on('admin:alerts:rowDeleted', (index, row) => {
+    EventBus.$on('admin:alerts:rowDeleted', () => {
       this.refreshTable();
     });
   },
@@ -66,7 +69,7 @@ export default {
           title: this.$t('message.name'),
           field: 'name',
           sortable: false,
-          formatter(value, row, index) {
+          formatter(value) {
             return xssFilters.inHTMLData(common.valueWithDefault(value, ''));
           },
         },
@@ -74,7 +77,7 @@ export default {
           title: this.$t('admin.publisher'),
           field: 'publisher.name',
           sortable: false,
-          formatter(value, row, index) {
+          formatter(value) {
             return xssFilters.inHTMLData(common.valueWithDefault(value, ''));
           },
         },
@@ -82,7 +85,7 @@ export default {
           title: this.$t('admin.scope'),
           field: 'scope',
           sortable: false,
-          formatter(value, row, index) {
+          formatter(value) {
             return xssFilters.inHTMLData(common.valueWithDefault(value, ''));
           },
         },
@@ -90,7 +93,7 @@ export default {
           title: this.$t('admin.notification_level'),
           field: 'notificationLevel',
           sortable: false,
-          formatter(value, row, index) {
+          formatter(value) {
             return xssFilters.inHTMLData(common.valueWithDefault(value, ''));
           },
         },
@@ -109,7 +112,7 @@ export default {
           field: 'enabled',
           sortable: false,
           align: 'center',
-          formatter: function (value, row, index) {
+          formatter: function (value) {
             return value === true ? '<i class="fa fa-check-square-o" />' : '';
           },
         },
@@ -146,26 +149,25 @@ export default {
                       <c-switch id="notificationLogSuccessfulPublish" color="primary" v-model="logSuccessfulPublish" label v-bind="labelIcon" :title="$t('admin.alert_log_successful_publish_help')" />
                       {{ $t('admin.alert_log_successful_publish') }}
                     </b-form-group>
-                    <b-form-group id="fieldset-2" :label="this.$t('admin.publisher')" label-for="input-2">
-                      <b-form-input id="input-2" v-model="publisherName" disabled class="form-control disabled" readonly trim />
-                    </b-form-group>
-                    <b-form-group id="fieldset-2" :label="this.$t('admin.publisher_class')" label-for="input-2">
-                      <b-form-input id="input-2" v-model="publisherClass" disabled class="form-control disabled" readonly trim />
-                    </b-form-group>
                     <b-form-group id="fieldset-3" :label="this.$t('admin.notification_level')" label-for="input-3">
                       <b-form-select id="input-3" v-model="notificationLevel" :options="availableLevels" required></b-form-select>
                     </b-form-group>
-                    <b-input-group-form-input id="input-destination" :label="this.destinationLabel" input-group-size="mb-3"
-                                              :required="(!(this.alert.hasOwnProperty('teams') && this.alert.teams != null && this.alert.teams.length > 0)).toString()"
-                                              type="text" v-model="destination" lazy="true" />
-                    <b-input-group-form-input v-if="this.publisherClass === 'org.dependencytrack.notification.publisher.WebhookPublisher'" id="input-token-header" :label="$t('admin.api_token_header')" input-group-size="mb-3"
-                                              type="password" v-model="tokenHeader" lazy="true" />
-                    <b-input-group-form-input v-if="this.publisherClass === 'org.dependencytrack.notification.publisher.WebhookPublisher'" id="input-token" :label="$t('admin.api_token')" input-group-size="mb-3"
-                                              type="password" v-model="token" lazy="true" />
-                    <b-input-group-form-input v-if="this.publisherClass === 'org.dependencytrack.notification.publisher.JiraPublisher'" id="input-jira-ticket-type"
-                                              :label="$t('admin.jira_ticket_type')" :required="true" type="text" v-model="jiraTicketType" lazy="true" />
-                     <b-form-group v-if="this.publisherClass === 'org.dependencytrack.notification.publisher.SendMailPublisher'"
-                                   id="teamDestinationList" :label="this.$t('admin.select_team_as_recipient')">
+                    <b-form-group :label="$t('admin.filter_expression')">
+                      <b-button :variant="filterExpressionMarkers.length > 0 ? 'outline-danger' : 'outline-primary'" size="sm" @click="showFilterExpressionModal = true">
+                        <i class="fa fa-filter"></i> {{ filterExpression ? $t('message.edit') : $t('message.add') }}
+                        <b-badge v-if="filterExpressionMarkers.length > 0" variant="danger" class="ml-1">!</b-badge>
+                      </b-button>
+                      <span v-if="filterExpression" class="ml-2 text-muted font-sm" style="font-family: monospace" :title="filterExpression">{{ filterExpression.length > 32 ? filterExpression.substring(0, 32) + '...' : filterExpression }}</span>
+                    </b-form-group>
+                    <extension-config-form
+                      v-if="alert.publisher && alert.publisher.uuid && isPublisherConfigurable === true"
+                      ref="extensionConfigForm"
+                      :extension-name="alert.publisher.name"
+                      :config-schema-url="getConfigSchemaUrl(alert.publisher.uuid)"
+                      :initial-config="getInitialConfig(alert.publisherConfig)"
+                      :hide-submit-button="true"
+                    />
+                     <b-form-group id="teamDestinationList" :label="this.$t('admin.select_team_as_recipient')">
                        <div class="list group">
                           <span v-for="team in teams">
                             <actionable-list-group-item :value="team.name" :delete-icon="true" v-on:actionClicked="removeSelectedTeam(team.uuid)"></actionable-list-group-item>
@@ -199,9 +201,6 @@ export default {
                   </div>
                   </b-col>
                   <b-col sm="6">
-                    <b-form-group id="fieldset-5" :label="this.$t('admin.scope')" label-for="input-5">
-                      <b-form-input id="input-5" v-model="scope" disabled class="form-control disabled" readonly trim />
-                    </b-form-group>
                     <b-form-group id="fieldset-6" :label="this.$t('admin.group')" label-for="input-6">
                       <div class="list-group" v-if="this.scope === 'PORTFOLIO'">
                         <b-form-checkbox-group id="checkbox-group-notify-on" v-model="notifyOn">
@@ -216,6 +215,7 @@ export default {
                           <div v-if="!isScheduled" class="list-group-item"><b-form-checkbox value="VEX_PROCESSED">VEX_PROCESSED</b-form-checkbox></div>
                           <div v-if="!isScheduled" class="list-group-item"><b-form-checkbox value="POLICY_VIOLATION">POLICY_VIOLATION</b-form-checkbox></div>
                           <div v-if="!isScheduled" class="list-group-item"><b-form-checkbox value="PROJECT_CREATED">PROJECT_CREATED</b-form-checkbox></div>
+                          <div v-if="!isScheduled" class="list-group-item"><b-form-checkbox value="VULNERABILITY_RETRACTED">VULNERABILITY_RETRACTED</b-form-checkbox></div>
                           <div v-if="isScheduled" class="list-group-item"><b-form-checkbox value="NEW_POLICY_VIOLATIONS_SUMMARY">NEW_POLICY_VIOLATIONS_SUMMARY</b-form-checkbox></div>
                           <div v-if="isScheduled" class="list-group-item"><b-form-checkbox value="NEW_VULNERABILITIES_SUMMARY">NEW_VULNERABILITIES_SUMMARY</b-form-checkbox></div>
                         </b-form-checkbox-group>
@@ -225,7 +225,6 @@ export default {
                           <div class="list-group-item"><b-form-checkbox value="ANALYZER">ANALYZER</b-form-checkbox></div>
                           <div class="list-group-item"><b-form-checkbox value="DATASOURCE_MIRRORING">DATASOURCE_MIRRORING</b-form-checkbox></div>
                           <div class="list-group-item"><b-form-checkbox value="FILE_SYSTEM">FILE_SYSTEM</b-form-checkbox></div>
-                          <div class="list-group-item"><b-form-checkbox value="INDEXING_SERVICE">INDEXING_SERVICE</b-form-checkbox></div>
                           <div class="list-group-item"><b-form-checkbox value="REPOSITORY">REPOSITORY</b-form-checkbox></div>
                           <div class="list-group-item"><b-form-checkbox value="USER_CREATED">USER_CREATED</b-form-checkbox></div>
                           <div class="list-group-item"><b-form-checkbox value="USER_DELETED">USER_DELETED</b-form-checkbox></div>
@@ -248,6 +247,35 @@ export default {
                        <b-button variant="primary" @click="updateNotificationRule">{{ $t('admin.submit') }}</b-button>
                     </div>
                   </b-col>
+                  <b-modal v-model="showFilterExpressionModal" :title="$t('admin.filter_expression')" size="lg">
+                    <p class="text-muted font-sm">{{ $t('admin.filter_expression_help') }}<br/>{{ $t('admin.filter_expression_help_fail_open') }}</p>
+                    <div class="mb-3">
+                      <b-button @click="showFilterExpressionReference = !showFilterExpressionReference" variant="outline-info" size="sm" class="mr-2">
+                        <i class="fa fa-book"></i> {{ $t('admin.filter_expression_reference') }}
+                      </b-button>
+                      <b-dropdown variant="outline-primary" size="sm">
+                        <template #button-content>
+                          <i class="fa fa-magic"></i> {{ $t('admin.filter_expression_insert_template') }}
+                        </template>
+                        <b-dropdown-item v-for="tpl in filterExpressionTemplates" :key="tpl.label" @click="insertFilterExpressionTemplate(tpl)">
+                          {{ tpl.label }}
+                        </b-dropdown-item>
+                      </b-dropdown>
+                      <b-button v-if="filterExpression" variant="outline-danger" size="sm" class="ml-2" @click="filterExpression = ''">
+                        <i class="fa fa-times"></i> {{ $t('message.clear') }}
+                      </b-button>
+                    </div>
+                    <b-collapse v-model="showFilterExpressionReference" class="mb-3">
+                      <b-card>
+                        <p class="mb-3">
+                          {{ $t('message.policy_expression_cel_hint') }}
+                          <a href="https://cel.dev/overview/cel-overview" target="_blank" rel="noopener noreferrer">{{ $t('message.policy_cel_overview_link') }}</a>
+                        </p>
+                        <b-table-lite :items="filterExpressionReferenceItems" :fields="filterExpressionReferenceFields" small bordered />
+                      </b-card>
+                    </b-collapse>
+                    <code-mirror-editor v-model="filterExpression" :completion-source="celCompletionSource" :markers="filterExpressionMarkers" initial-height="200px" />
+                  </b-modal>
                   <select-project-modal v-on:selection="updateProjectSelection"/>
                   <select-team-modal v-on:selection="updateTeamSelection"></select-team-modal>
                 </b-row>
@@ -261,6 +289,8 @@ export default {
               BInputGroupFormInput,
               VueTagsInput,
               cSwitch,
+              ExtensionConfigForm,
+              CodeMirrorEditor,
             },
             data() {
               return {
@@ -271,13 +301,7 @@ export default {
                 triggerType: row.triggerType,
                 logSuccessfulPublish: row.logSuccessfulPublish,
                 notifyChildren: row.notifyChildren,
-                publisherName: row.publisher.name,
-                publisherClass: row.publisher.publisherClass,
                 notificationLevel: row.notificationLevel,
-                destination: this.parseDestination(row),
-                token: this.parseToken(row),
-                tokenHeader: this.parseTokenHeader(row),
-                jiraTicketType: this.parseJiraTicketType(row),
                 scope: row.scope,
                 notifyOn: row.notifyOn,
                 projects: row.projects,
@@ -311,35 +335,97 @@ export default {
                   { value: 'WARNING', text: 'Warning' },
                   { value: 'ERROR', text: 'Error' },
                 ],
+                isPublisherConfigurable: null,
+                filterExpression: row.filterExpression || '',
+                filterExpressionMarkers: [],
+                showFilterExpressionModal: false,
+                showFilterExpressionReference: false,
+                celCompletionSource: createCelCompletionSource({
+                  component: undefined,
+                  project: undefined,
+                  vulns: undefined,
+                  now: undefined,
+                  level: 'int',
+                  scope: 'int',
+                  group: 'int',
+                  title: 'string',
+                  content: 'string',
+                  timestamp: 'Timestamp',
+                  subject: 'dyn',
+                }),
+                filterExpressionReferenceFields: [
+                  { key: 'variable', label: i18n.t('message.variable') },
+                  { key: 'type', label: i18n.t('message.type') },
+                  { key: 'description', label: i18n.t('message.description') },
+                ],
+                filterExpressionReferenceItems: [
+                  {
+                    variable: 'level',
+                    type: 'int',
+                    description: i18n.t('admin.filter_expression_var_level'),
+                  },
+                  {
+                    variable: 'scope',
+                    type: 'int',
+                    description: i18n.t('admin.filter_expression_var_scope'),
+                  },
+                  {
+                    variable: 'group',
+                    type: 'int',
+                    description: i18n.t('admin.filter_expression_var_group'),
+                  },
+                  {
+                    variable: 'title',
+                    type: 'string',
+                    description: i18n.t('admin.filter_expression_var_title'),
+                  },
+                  {
+                    variable: 'content',
+                    type: 'string',
+                    description: i18n.t('admin.filter_expression_var_content'),
+                  },
+                  {
+                    variable: 'timestamp',
+                    type: 'Timestamp',
+                    description: i18n.t(
+                      'admin.filter_expression_var_timestamp',
+                    ),
+                  },
+                  {
+                    variable: 'subject',
+                    type: 'dyn',
+                    description: i18n.t('admin.filter_expression_var_subject'),
+                  },
+                ],
+                filterExpressionTemplates: [
+                  {
+                    label: i18n.t('admin.filter_expression_tpl_severity'),
+                    cel: 'subject.vulnerability.severity == "CRITICAL"',
+                  },
+                  {
+                    label: i18n.t('admin.filter_expression_tpl_project_name'),
+                    cel: 'subject.project.name == "my-project"',
+                  },
+                ],
               };
             },
             created() {
               this.initializeTags();
-              this.parseDestination(this.alert);
-              this.parseToken(this.alert);
-              this.parseTokenHeader(this.alert);
-              this.parseJiraTicketType(this.alert);
+              this.checkPublisherConfigurability();
+            },
+            computed: {
+              isScheduled() {
+                return this.triggerType === 'SCHEDULE';
+              },
             },
             watch: {
               alert() {
                 this.initializeTags();
               },
+              filterExpression() {
+                this.filterExpressionMarkers = [];
+              },
               tag: 'searchTags',
-            },
-            computed: {
-              destinationLabel() {
-                if (
-                  this.publisherClass ===
-                  'org.dependencytrack.notification.publisher.JiraPublisher'
-                ) {
-                  return this.$t('admin.jira_project_key');
-                }
-
-                return this.$t('admin.destination');
-              },
-              isScheduled() {
-                return this.triggerType === 'SCHEDULE';
-              },
             },
             methods: {
               initializeTags: function () {
@@ -354,43 +440,63 @@ export default {
                   return projectName;
                 }
               },
-              parseDestination: function (alert) {
-                if (alert.publisherConfig) {
-                  let value = JSON.parse(alert.publisherConfig);
-                  if (value) {
-                    return value.destination;
-                  }
-                  return null;
+              getConfigSchemaUrl: function (publisherUuid) {
+                return `${this.$api.BASE_URL}/api/v1/notification/publisher/${publisherUuid}/configSchema`;
+              },
+              getInitialConfig: function (publisherConfig) {
+                if (!publisherConfig) {
+                  return {};
+                }
+                try {
+                  return typeof publisherConfig === 'string'
+                    ? JSON.parse(publisherConfig)
+                    : publisherConfig;
+                } catch (e) {
+                  console.error('Failed to parse publisherConfig:', e);
+                  return {};
                 }
               },
-              parseToken: function (alert) {
-                if (alert.publisherConfig) {
-                  let value = JSON.parse(alert.publisherConfig);
-                  if (value) {
-                    return value.token;
-                  }
-                  return null;
+              // Some publishers such as the console publisher do not support
+              // rule-level configuration. In that case, the /configSchema
+              // endpoint will return 204 (no content).
+              checkPublisherConfigurability: async function () {
+                if (!this.alert.publisher || !this.alert.publisher.uuid) {
+                  this.isPublisherConfigurable = false;
+                  return;
+                }
+                try {
+                  const response = await this.axios.get(
+                    this.getConfigSchemaUrl(this.alert.publisher.uuid),
+                    {
+                      validateStatus: (status) =>
+                        status === 200 || status === 204,
+                    },
+                  );
+                  this.isPublisherConfigurable = response.status === 200;
+                } catch (error) {
+                  console.error(
+                    'Failed to check publisher configurability:',
+                    error,
+                  );
+                  this.isPublisherConfigurable = false;
                 }
               },
-              parseTokenHeader: function (alert) {
-                if (alert.publisherConfig) {
-                  let value = JSON.parse(alert.publisherConfig);
-                  if (value) {
-                    return value.tokenHeader;
+              updateNotificationRule: async function () {
+                let publisherConfig = this.alert.publisherConfig;
+                if (this.$refs.extensionConfigForm) {
+                  try {
+                    const config =
+                      await this.$refs.extensionConfigForm.validateAndGetConfig();
+                    publisherConfig = JSON.stringify(config);
+                  } catch (error) {
+                    this.$toastr.e(
+                      error.message,
+                      this.$t('message.input_validation_failed'),
+                    );
+                    return;
                   }
-                  return null;
                 }
-              },
-              parseJiraTicketType: function (alert) {
-                if (alert.publisherConfig) {
-                  let value = JSON.parse(alert.publisherConfig);
-                  if (value) {
-                    return value.jiraTicketType;
-                  }
-                  return null;
-                }
-              },
-              updateNotificationRule: function () {
+
                 let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}`;
                 let payload = {
                   uuid: this.uuid,
@@ -399,14 +505,11 @@ export default {
                   logSuccessfulPublish: this.logSuccessfulPublish,
                   notifyChildren: this.notifyChildren,
                   notificationLevel: this.notificationLevel,
+                  scope: this.scope,
                   triggerType: this.triggerType,
-                  publisherConfig: JSON.stringify({
-                    destination: this.destination,
-                    jiraTicketType: this.jiraTicketType,
-                    token: this.token,
-                    tokenHeader: this.tokenHeader,
-                  }),
+                  publisherConfig: publisherConfig,
                   notifyOn: this.notifyOn,
+                  filterExpression: this.filterExpression,
                   tags: this.tags.map((tag) => {
                     return { name: tag.text };
                   }),
@@ -415,15 +518,45 @@ export default {
                   payload.scheduleCron = this.scheduleCron;
                   payload.scheduleSkipUnchanged = this.scheduleSkipUnchanged;
                 }
-                this.axios.post(url, payload).then((response) => {
-                  this.alert = response.data;
-                  this.destination = this.parseDestination(this.alert);
-                  this.token = this.parseToken(this.alert);
-                  this.tokenHeader = this.parseTokenHeader(this.alert);
-                  this.jiraTicketType = this.parseJiraTicketType(this.alert);
-                  EventBus.$emit('admin:alerts:rowUpdate', index, this.alert);
-                  this.$toastr.s(this.$t('message.updated'));
-                });
+                this.axios
+                  .post(url, payload, {
+                    validateStatus: (status) =>
+                      (status >= 200 && status < 300) || status === 400,
+                  })
+                  .then((response) => {
+                    if (response.status === 400) {
+                      if (
+                        response.data &&
+                        Array.isArray(response.data.errors)
+                      ) {
+                        this.filterExpressionMarkers = response.data.errors.map(
+                          (err) => ({
+                            startLineNumber: err.line || 1,
+                            endLineNumber: err.line || 1,
+                            startColumn: err.column || 1,
+                            endColumn: (err.column || 1) + 3,
+                            message: err.message || 'Compilation error',
+                          }),
+                        );
+                        this.showFilterExpressionModal = true;
+                        this.$toastr.w(
+                          this.$t('admin.filter_expression_invalid'),
+                        );
+                      } else {
+                        this.$toastr.w(
+                          this.$t('condition.unsuccessful_action'),
+                        );
+                      }
+                      return;
+                    }
+                    this.filterExpressionMarkers = [];
+                    this.alert = response.data;
+                    EventBus.$emit('admin:alerts:rowUpdate', index, this.alert);
+                    this.$toastr.s(this.$t('message.updated'));
+                  })
+                  .catch(() => {
+                    this.$toastr.w(this.$t('condition.unsuccessful_action'));
+                  });
               },
               deleteNotificationRule: function () {
                 let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}`;
@@ -433,11 +566,11 @@ export default {
                       uuid: this.alert.uuid,
                     },
                   })
-                  .then((response) => {
+                  .then(() => {
                     EventBus.$emit('admin:alerts:rowDeleted', index);
                     this.$toastr.s(this.$t('admin.alert_deleted'));
                   })
-                  .catch((error) => {
+                  .catch(() => {
                     this.$toastr.w(this.$t('condition.unsuccessful_action'));
                   });
               },
@@ -445,7 +578,7 @@ export default {
                 let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}/${this.uuid}/project/${projectUuid}`;
                 this.axios
                   .delete(url)
-                  .then((response) => {
+                  .then(() => {
                     let p = [];
                     for (let i = 0; i < this.projects.length; i++) {
                       if (this.projects[i].uuid !== projectUuid) {
@@ -455,7 +588,18 @@ export default {
                     this.projects = p;
                     this.$toastr.s(this.$t('message.updated'));
                   })
-                  .catch((error) => {
+                  .catch(() => {
+                    this.$toastr.w(this.$t('condition.unsuccessful_action'));
+                  });
+              },
+              testNotification: function () {
+                let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_PUBLISHER}/test/${this.uuid}`;
+                this.axios
+                  .post(url)
+                  .then(() => {
+                    this.$toastr.s(this.$t('admin.test_notification_queued'));
+                  })
+                  .catch(() => {
                     this.$toastr.w(this.$t('condition.unsuccessful_action'));
                   });
               },
@@ -486,7 +630,7 @@ export default {
                   let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}/${this.uuid}/project/${selection.uuid}`;
                   this.axios
                     .post(url)
-                    .then((response) => {
+                    .then(() => {
                       this.projects.push(selection);
                       this.$toastr.s(this.$t('message.updated'));
                     })
@@ -508,7 +652,7 @@ export default {
                   let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}/${this.uuid}/team/${selection.uuid}`;
                   this.axios
                     .post(url)
-                    .then((response) => {
+                    .then(() => {
                       if (this.teams) {
                         this.teams.push(selection);
                       } else {
@@ -535,7 +679,7 @@ export default {
                 let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_RULE}/${this.uuid}/team/${teamUuid}`;
                 this.axios
                   .delete(url)
-                  .then((response) => {
+                  .then(() => {
                     let newTeams = [];
                     for (let i = 0; i < this.teams.length; i++) {
                       if (this.teams[i].uuid !== teamUuid) {
@@ -544,15 +688,22 @@ export default {
                     }
                     this.teams = newTeams;
                   })
-                  .catch((error) => {
+                  .catch(() => {
                     this.$toastr.w(this.$t('condition.unsuccessful_action'));
                   });
+              },
+              insertFilterExpressionTemplate: function (tpl) {
+                if (!this.filterExpression.trim()) {
+                  this.filterExpression = tpl.cel;
+                } else {
+                  this.filterExpression =
+                    this.filterExpression + '\n\n' + tpl.cel;
+                }
               },
               searchTags: function () {
                 if (!this.tag) {
                   return;
                 }
-
                 clearTimeout(this.tagsAutoCompleteDebounce);
                 this.tagsAutoCompleteDebounce = setTimeout(() => {
                   const url = `${this.$api.BASE_URL}/${this.$api.URL_TAG}?searchText=${encodeURIComponent(this.tag)}&pageNumber=1&pageSize=6`;

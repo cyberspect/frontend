@@ -5,7 +5,10 @@
         size="md"
         variant="outline-primary"
         @click="initializeProjectCreateProjectModal"
-        v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT"
+        v-permission:or="[
+          PERMISSIONS.PORTFOLIO_MANAGEMENT,
+          PERMISSIONS.PORTFOLIO_MANAGEMENT_CREATE,
+        ]"
       >
         <span class="fa fa-plus"></span> {{ $t('message.create_project') }}
       </b-button>
@@ -42,7 +45,7 @@
       @on-load-success="onLoadSuccess"
     >
     </bootstrap-table>
-    <project-create-project-modal v-on:refreshTable="refreshTable" />
+    <project-create-project-modal />
   </div>
 </template>
 
@@ -57,7 +60,6 @@ import routerMixin from '../../../mixins/routerMixin';
 import common from '../../../shared/common';
 import PolicyViolationProgressBar from '../../components/PolicyViolationProgressBar';
 import SeverityProgressBar from '../../components/SeverityProgressBar';
-import PortfolioWidgetRow from '../../dashboard/PortfolioWidgetRow';
 import ProjectCreateProjectModal from './ProjectCreateProjectModal';
 
 export default {
@@ -65,7 +67,11 @@ export default {
   components: {
     cSwitch,
     ProjectCreateProjectModal,
-    PortfolioWidgetRow,
+  },
+  props: {
+    // If only children from a specific project shall be shown,
+    // this must be set to the corresponding project.
+    uuid: String,
   },
   props: {
     /**
@@ -89,39 +95,49 @@ export default {
     initializeProjectCreateProjectModal: function () {
       this.$root.$emit('initializeProjectCreateProjectModal');
     },
-    apiUrl: function (uuid) {
-      // if we only want to show children of a specific parent we force the base call to fetch its children
-      if (this.uuid && !uuid) {
-        uuid = this.uuid;
+    apiUrl: function (parentUuid) {
+      if (this.uuid && !parentUuid) {
+        parentUuid = this.uuid;
       }
 
-      let url = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}`;
-      if (uuid) {
-        url += `/${uuid}/children`;
+      let url = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}/concise`;
+      if (parentUuid) {
+        url += `/${parentUuid}/children`;
+      }
+      let queryParams = {
+        includeMetrics: true,
+      };
+      if (this.showInactiveProjects === false) {
+        queryParams['active'] = true;
       }
       let tag = this.$route.query.tag;
       if (tag) {
-        url += '/tag/' + encodeURIComponent(tag);
+        queryParams['tag'] = tag;
+      }
+      let team = this.$route.query.team;
+      if (team) {
+        queryParams['team'] = team;
       }
       let classifier = this.$route.query.classifier;
       if (classifier) {
-        url += '/classifier/' + encodeURIComponent(classifier);
+        queryParams['classifier'] = classifier;
       }
-      if (this.showInactiveProjects === undefined) {
-        url += '?excludeInactive=true';
-      } else {
-        url += '?excludeInactive=' + !this.showInactiveProjects;
-      }
-      if (this.isSearching) {
-        url += '&onlyRoot=false';
+      if (this.isSearching || parentUuid) {
+        queryParams['onlyRoot'] = false;
       } else {
         if (this.showFlatView === undefined) {
-          url += '&onlyRoot=true';
+          queryParams['onlyRoot'] = true;
         } else {
-          url += '&onlyRoot=' + !this.showFlatView;
+          queryParams['onlyRoot'] = !this.showFlatView;
         }
       }
-      return url;
+      let queryString = Object.keys(queryParams)
+        .map(
+          (key) =>
+            `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`,
+        )
+        .join('&');
+      return `${url}?${queryString}`;
     },
     refreshTable: function () {
       this.$refs.table.refresh({
@@ -153,29 +169,23 @@ export default {
           });
         }
         this.$refs.table.getData().forEach((project) => {
-          if (
-            project.children &&
-            !project.fetchedChildren &&
-            (this.showInactiveProjects ||
-              project.children.some((child) => child.active)) &&
-            (!this.$route.query.classifier ||
-              project.children.some(
-                (child) => child.classifier === this.$route.query.classifier,
-              )) &&
-            (!this.$route.query.tag ||
-              project.children.some(
-                (child) => child.tag === this.$route.query.tag,
-              ))
-          ) {
-            this.$refs.table.$table
-              .find('tbody')
-              .find('tr.treegrid-' + project.id.toString())
-              .addClass('treegrid-collapsed');
-            this.$refs.table.$table
-              .find('tbody')
-              .find('tr.treegrid-' + project.id.toString())
-              .treegrid('renderExpander');
+          if (project.fetchedChildren || project.checkedHasChildren) {
+            return;
           }
+          project.checkedHasChildren = true;
+
+          this.hasMatchingChildren(project).then((doesHaveMatchingChildren) => {
+            if (doesHaveMatchingChildren) {
+              this.$refs.table.$table
+                .find('tbody')
+                .find('tr.treegrid-' + project.id.toString())
+                .addClass('treegrid-collapsed');
+              this.$refs.table.$table
+                .find('tbody')
+                .find('tr.treegrid-' + project.id.toString())
+                .treegrid('renderExpander');
+            }
+          });
         });
         this.$refs.table.getData().forEach((row) => {
           if (row.expanded) {
@@ -193,16 +203,31 @@ export default {
       }
       this.$refs.table.hideLoading();
     },
-    getChildren: async function (project) {
-      let url = this.apiUrl(project.uuid);
+    getChildren: async function (parentProject) {
+      let url = this.apiUrl(parentProject.uuid);
       await this.axios.get(url).then((response) => {
         for (let project of response.data) {
-          if (project.parent) {
-            project.pid = MurmurHash2(project.parent.uuid).result();
-          }
+          project.pid = MurmurHash2(parentProject.uuid).result();
         }
         this.$refs.table.append(response.data);
       });
+    },
+    hasMatchingChildren: function (project) {
+      if (!project.hasChildren) {
+        return new Promise(() => false);
+      }
+
+      // Perform a pre-flight search if there is at least one
+      // child project that matches the current search criteria,
+      // and is accessible to the user.
+      //
+      // While this *does* result in an additional request per project
+      // with hasChildren=true, it's still better than returning child
+      // data in the project list response.
+      let url = this.apiUrl(project.uuid);
+      return this.axios
+        .get(`${url}&pageNumber=1&pageSize=1`)
+        .then((response) => Number(response.headers['x-total-count']) > 0);
     },
     saveViewState: function () {
       this.savedViewState = this.showFlatView;
@@ -262,29 +287,8 @@ export default {
               }).route.fullPath,
             );
             let collectionIcon = '';
-            if (row.collectionLogic !== 'NONE') {
-              let title = '';
-              switch (row.collectionLogic) {
-                case 'AGGREGATE_DIRECT_CHILDREN':
-                  title = this.$t(
-                    'message.collection_logic_metrics_by_aggregate_direct_children',
-                  );
-                  break;
-                case 'AGGREGATE_DIRECT_CHILDREN_WITH_TAG':
-                  const tag = !row.collectionTag
-                    ? ''
-                    : xssFilters.inDoubleQuotedAttr(row.collectionTag.name);
-                  title = this.$t(
-                    'message.collection_logic_metrics_by_aggregate_direct_children_with_tags',
-                    { tag: tag },
-                  );
-                  break;
-                case 'AGGREGATE_LATEST_VERSION_CHILDREN':
-                  title = this.$t(
-                    'message.collection_logic_metrics_by_aggregate_latest_version',
-                  );
-                  break;
-              }
+            if (row.collectionLogic) {
+              const title = common.getCollectionLogicText(this, row);
               collectionIcon = ` <i class="fa fa-calculator fa-fw icon-cellend" title="${title}"></i>`;
             }
             return `<a href="${url}">${xssFilters.inHTMLData(value)}</a>${collectionIcon}`;
@@ -319,6 +323,34 @@ export default {
           },
         },
         {
+          title: this.$t('message.teams'),
+          field: 'teams',
+          sortable: false,
+          visible: false,
+          routerFunc: () => this.$router, // Injecting $router directly causes recursion errors in Vue...
+          formatter(value, row, index) {
+            const router = this.routerFunc();
+            let team_string = '';
+            if (row.teams) {
+              team_string =
+                row.teams
+                  ?.slice(0, 2)
+                  .map((teams) => common.formatProjectTeamLabel(router, teams))
+                  .join(' ') || '';
+              if (row.teams.length > 2) {
+                team_string += ` <span class="d-none">`;
+                team_string += row.teams
+                  .slice(2)
+                  ?.map((teams) => common.formatProjectTeamLabel(router, teams))
+                  .join(' ');
+                team_string += `</span>`;
+                team_string += `<a href="#" title="show all teams" class="badge badge-team" onclick="this.previousElementSibling.classList.toggle('d-none')">…</a>`;
+              }
+            }
+            return team_string;
+          },
+        },
+        {
           title: this.$t('message.version'),
           field: 'version',
           sortable: true,
@@ -339,7 +371,7 @@ export default {
           title: this.$t('message.classifier'),
           field: 'classifier',
           sortable: true,
-          routerFunc: () => this.$router, // needed by formatter
+          routerFunc: () => this.$router,
           formatter: common.componentClassifierLabelProjectUrlFormatter(this),
         },
         {
@@ -359,7 +391,7 @@ export default {
         },
         {
           title: this.$t('message.risk_score'),
-          field: 'lastInheritedRiskScore',
+          field: 'lastRiskScore',
           sortable: true,
         },
         {
@@ -369,7 +401,7 @@ export default {
             return value === true ? '<i class="fa fa-check-square-o" />' : '';
           },
           align: 'center',
-          sortable: true,
+          sortable: false,
         },
         {
           title: this.$t('message.components'),
@@ -468,18 +500,8 @@ export default {
             if (
               event.target.tagName.toLowerCase() !== 'a' &&
               $element.treegrid('isLeaf') &&
-              row.children &&
-              !row.fetchedChildren &&
-              (this.showInactiveProjects ||
-                row.children.some((child) => child.active)) &&
-              (!this.$route.query.classifier ||
-                row.children.some(
-                  (child) => child.classifier === this.$route.query.classifier,
-                )) &&
-              (!this.$route.query.tag ||
-                row.children.some(
-                  (child) => child.tag === this.$route.query.tag,
-                ))
+              row.hasChildren &&
+              !row.fetchedChildren
             ) {
               row.fetchedChildren = true;
               this.getChildren(row);

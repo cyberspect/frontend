@@ -1,5 +1,14 @@
 <template>
-  <div class="animated fadeIn" v-permission="PERMISSIONS.POLICY_MANAGEMENT">
+  <div
+    class="animated fadeIn"
+    v-permission:or="[
+      PERMISSIONS.POLICY_MANAGEMENT,
+      PERMISSIONS.POLICY_MANAGEMENT_CREATE,
+      PERMISSIONS.POLICY_MANAGEMENT_READ,
+      PERMISSIONS.POLICY_MANAGEMENT_UPDATE,
+      PERMISSIONS.POLICY_MANAGEMENT_DELETE,
+    ]"
+  >
     <b-tabs
       class="body-bg-color"
       style="border-left: 0; border-right: 0; border-top: 0"
@@ -27,6 +36,23 @@
         >
         <license-group-list v-on:total="totalLicenseGroups = $event" />
       </b-tab>
+      <b-tab
+        ref="vulnerability"
+        class="body-bg-color overview-chart"
+        style="border-left: 0; border-right: 0; border-top: 0"
+        @click="routeTo('vulnerability')"
+      >
+        <template v-slot:title
+          ><i class="fa fa-list-alt"></i>
+          {{ $t('message.vulnerability_policies') }}
+          <b-badge variant="tab-total">{{
+            totalVulnerabilityPolicies
+          }}</b-badge></template
+        >
+        <vulnerability-policy-list
+          v-on:total="totalVulnerabilityPolicies = $event"
+        />
+      </b-tab>
     </b-tabs>
   </div>
 </template>
@@ -35,17 +61,20 @@
 import permissionsMixin from '../../mixins/permissionsMixin';
 import PolicyList from './PolicyList';
 import LicenseGroupList from './LicenseGroupList';
+import VulnerabilityPolicyList from './VulnerabilityPolicyList';
 
 export default {
   mixins: [permissionsMixin],
   components: {
     LicenseGroupList,
     PolicyList,
+    VulnerabilityPolicyList,
   },
   data() {
     return {
       totalPolicies: 0,
       totalLicenseGroups: 0,
+      totalVulnerabilityPolicies: 0,
     };
   },
   methods: {
@@ -64,17 +93,23 @@ export default {
       }
     },
     getTabFromRoute: function () {
-      let pattern = new RegExp('/policy\/([^\\/]*)', 'gi');
+      let pattern = new RegExp('/policy\/([^\\/?#]*)', 'gi');
       let tab = pattern.exec(this.$route.fullPath.toLowerCase());
       return this.$refs[tab && tab[1] ? tab[1].toLowerCase() : 'policies'];
     },
   },
   mounted() {
-    this.getTabFromRoute().active = true;
+    const tab = this.getTabFromRoute();
+    if (tab) {
+      tab.active = true;
+    }
   },
   watch: {
     $route() {
-      this.getTabFromRoute().activate();
+      const tab = this.getTabFromRoute();
+      if (tab) {
+        tab.activate();
+      }
     },
   },
 };

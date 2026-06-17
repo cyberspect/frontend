@@ -49,6 +49,33 @@ $common.formatProjectTagLabel = function formatProjectTagLabel(router, tag) {
 };
 
 /**
+ * Formats and returns a specialized label for a project team.
+ */
+$common.formatProjectTeamLabel = function formatProjectTeamLabel(router, team) {
+  if (!team) {
+    return '';
+  }
+  return `<a href="${
+    router.resolve({ name: 'Projects', query: { team: team.name } }).href
+  }" class="badge badge-team text-lowercase mr-1">${xssFilters.inHTMLData(
+    team.name,
+  )}</a>`;
+};
+
+/**
+ * Formats and returns a specialized label for a vulnerability tag.
+ */
+$common.formatVulnerabilityTagLabel = function formatVulnerabilityTagLabel(
+  router,
+  tag,
+) {
+  if (!tag) {
+    return '';
+  }
+  return `<a href="${router.resolve({ name: 'Vulnerabilities', query: { tag: tag.name } }).href}" class="badge badge-tag text-lowercase mr-1">${xssFilters.inHTMLData(tag.name)}</a>`;
+};
+
+/**
  * Changes the first letter to uppercase and the remaining letters to lowercase.
  *
  * @param {string} string the String to capitalize
@@ -58,6 +85,22 @@ $common.capitalize = function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   }
   return string;
+};
+
+/**
+ * Converts a slug-case string to title case.
+ * e.g. "oss-index" → "Oss Index", "internal" → "Internal"
+ *
+ * @param {string} slug the slug-case string to convert
+ */
+$common.titleCase = function titleCase(slug) {
+  if (!slug) {
+    return slug;
+  }
+  return slug
+    .split('-')
+    .map((w) => $common.capitalize(w))
+    .join(' ');
 };
 
 /**
@@ -123,7 +166,7 @@ $common.formatCweShortLabel = function formatCweShortLabel(cweId, cweName) {
 };
 
 /**
- * Formats and returns a specialized label for a vulnerability analyzer (OSSINDEX_ANALYZER, INTERNAL_ANALYZER, etc).
+ * Formats and returns a specialized label for a vulnerability analyzer.
  */
 $common.formatAnalyzerLabel = function formatAnalyzerLabel(
   analyzer,
@@ -135,50 +178,30 @@ $common.formatAnalyzerLabel = function formatAnalyzerLabel(
   if (!analyzer) {
     return null;
   }
-  let analyzerLabel = '';
-  let analyzerUrl = null;
-  switch (analyzer) {
-    case 'INTERNAL_ANALYZER':
-      analyzerLabel = vulnSource;
-      if (vulnSource === 'GITHUB') {
+  let analyzerUrl = referenceUrl;
+  if (!analyzerUrl) {
+    switch (vulnSource) {
+      case 'GITHUB':
         analyzerUrl = 'https://github.com/advisories/' + vulnId;
-      } else if (vulnSource === 'OSV') {
-        analyzerUrl = 'https://osv.dev/vulnerability/' + vulnId;
-      } else if (vulnSource === 'SNYK') {
-        analyzerUrl = 'https://security.snyk.io/vuln/' + vulnId;
-      }
-      break;
-    case 'OSSINDEX_ANALYZER':
-      analyzerLabel = 'OSS Index';
-      analyzerUrl = referenceUrl
-        ? referenceUrl
-        : 'https://ossindex.sonatype.org/vuln/' + vulnId;
-      break;
-    case 'VULNDB_ANALYZER':
-      analyzerLabel = 'VulnDB';
-      analyzerUrl =
-        'https://vulndb.cyberriskanalytics.com/vulnerabilities/' + vulnId;
-      break;
-    case 'SNYK_ANALYZER':
-      analyzerLabel = 'Snyk';
-      analyzerUrl = 'https://security.snyk.io/vuln/' + vulnId;
-      break;
-    case 'TRIVY_ANALYZER':
-      analyzerLabel = 'Trivy';
-      if (vulnSource === 'NVD') {
+        break;
+      case 'NVD':
         analyzerUrl = 'https://nvd.nist.gov/vuln/detail/' + vulnId;
-      } else if (vulnSource === 'GITHUB') {
-        analyzerUrl = 'https://github.com/advisories/' + vulnId;
-      }
-      // NB: Trivy can report vulnerabilities from sources that DT does
-      // not explicitly support.
-      break;
+        break;
+      case 'OSV':
+        analyzerUrl = 'https://osv.dev/vulnerability/' + vulnId;
+        break;
+    }
   }
+
+  const escapedLabel = xssFilters.inHTMLData($common.titleCase(analyzer));
+  let analyzerLabel = '';
   if (analyzerUrl) {
-    analyzerLabel = `<a href="${analyzerUrl}" target="_blank">${analyzerLabel} <i class="fa fa-external-link"></i></a>`;
+    const sanitizedUrl = xssFilters.uriInDoubleQuotedAttr(analyzerUrl);
+    analyzerLabel = `<a href="${sanitizedUrl}" target="_blank">${escapedLabel} <i class="fa fa-external-link"></i></a>`;
   } else {
-    analyzerLabel = `<span class="label-analyzer-internal"> ${analyzerLabel} </span>`;
+    analyzerLabel = `<span class="label-analyzer-internal"> ${escapedLabel} </span>`;
   }
+
   return `<span class="label label-source label-analyzer" style="white-space:nowrap;">${analyzerLabel}</span>`;
 };
 
@@ -407,7 +430,6 @@ $common.componentClassifierLabelFormatter = (i18n) => {
  */
 $common.componentClassifierLabelProjectUrlFormatter = (i18n) => {
   return function (value) {
-    // if column defines a routerFunc returning the router we use a more robust solution
     let url = !this.routerFunc
       ? '../projects/?classifier=' + value
       : this.routerFunc().resolve({
@@ -475,6 +497,22 @@ $common.formatTimestamp = function formatTimestamp(timestamp, includeTime) {
       date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear()
     );
   }
+};
+
+/**
+ * Formats a millisecond delta as a localized "just now" / "Xs ago" / "Xm ago" / "Xh ago" / "Xd ago" string.
+ * Pass the i18n `$t` function bound to the calling component.
+ */
+$common.formatRelative = function formatRelative(diffMs, $t) {
+  const diff = Math.max(0, Math.floor(diffMs / 1000));
+  if (diff < 10) return $t('message.relative_just_now');
+  if (diff < 60) return $t('message.relative_seconds_ago', { n: diff });
+  const m = Math.floor(diff / 60);
+  if (m < 60) return $t('message.relative_minutes_ago', { n: m });
+  const h = Math.floor(m / 60);
+  if (h < 24) return $t('message.relative_hours_ago', { n: h });
+  const d = Math.floor(h / 24);
+  return $t('message.relative_days_ago', { n: d });
 };
 
 /*
@@ -570,6 +608,69 @@ $common.trimToNull = function (value) {
   return value;
 };
 
+$common.setQueryParams = function (url, params) {
+  // During local development, the API base URL is empty,
+  // leading to URLs such as "/api/v2/secrets".
+  // URL parsing fails when the URL is not absolute,
+  // so we supply a dummy localhost base URL if needed.
+  const isRelative = url.startsWith('/');
+  const parsed = isRelative ? new URL(url, 'http://localhost') : new URL(url);
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      parsed.searchParams.delete(key);
+      for (const v of value) {
+        if (v !== undefined && v !== null) {
+          parsed.searchParams.append(key, v);
+        }
+      }
+    } else if (value !== undefined && value !== null) {
+      parsed.searchParams.set(key, value);
+    }
+  }
+  return isRelative
+    ? parsed.pathname + parsed.search + parsed.hash
+    : parsed.href;
+};
+
+$common.sameQueryParams = function (a, b) {
+  const canonicalize = (params) => {
+    const pairs = [];
+    for (const [key, value] of Object.entries(params || {})) {
+      const values = Array.isArray(value) ? value : [value];
+      for (const v of values) {
+        if (v !== undefined && v !== null) {
+          pairs.push([key, String(v)]);
+        }
+      }
+    }
+    return JSON.stringify(pairs.sort());
+  };
+  return canonicalize(a) === canonicalize(b);
+};
+
+$common.getCollectionLogicText = function (i18n, project) {
+  const tag = project.collectionTag
+    ? xssFilters.inDoubleQuotedAttr(project.collectionTag.name)
+    : '';
+  switch (project.collectionLogic) {
+    case 'AGGREGATE_DIRECT_CHILDREN':
+      return i18n.$t(
+        'message.collection_logic_metrics_by_aggregate_direct_children',
+      );
+    case 'AGGREGATE_DIRECT_CHILDREN_WITH_TAG':
+      return i18n.$t(
+        'message.collection_logic_metrics_by_aggregate_direct_children_with_tags',
+        { tag },
+      );
+    case 'AGGREGATE_LATEST_VERSION_CHILDREN':
+      return i18n.$t(
+        'message.collection_logic_metrics_by_aggregate_latest_version',
+      );
+    default:
+      return '';
+  }
+};
+
 $common.OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX = {
   LOW: {
     LOW: 'INFO',
@@ -597,7 +698,10 @@ export default {
   formatSourceLabel: $common.formatSourceLabel,
   formatNotificationLabel: $common.formatNotificationLabel,
   formatProjectTagLabel: $common.formatProjectTagLabel,
+  formatProjectTeamLabel: $common.formatProjectTeamLabel,
+  formatVulnerabilityTagLabel: $common.formatVulnerabilityTagLabel,
   capitalize: $common.capitalize,
+  titleCase: $common.titleCase,
   formatSeverityLabel: $common.formatSeverityLabel,
   formatViolationStateLabel: $common.formatViolationStateLabel,
   formatCweLabel: $common.formatCweLabel,
@@ -612,12 +716,16 @@ export default {
   componentClassifierLabelProjectUrlFormatter:
     $common.componentClassifierLabelProjectUrlFormatter,
   formatTimestamp: $common.formatTimestamp,
+  formatRelative: $common.formatRelative,
   concatenateComponentName: $common.concatenateComponentName,
   valueWithDefault: $common.valueWithDefault,
   calcProgressPercent: $common.calcProgressPercent,
   sleep: $common.sleep,
   toBoolean: $common.toBoolean,
   trimToNull: $common.trimToNull,
+  setQueryParams: $common.setQueryParams,
+  sameQueryParams: $common.sameQueryParams,
   OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX:
     $common.OWASP_RR_LIKELIHOOD_TO_IMPACT_SEVERITY_MATRIX,
+  getCollectionLogicText: $common.getCollectionLogicText,
 };

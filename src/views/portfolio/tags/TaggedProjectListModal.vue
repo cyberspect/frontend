@@ -15,8 +15,8 @@
     >
     </bootstrap-table>
     <template v-slot:modal-footer="{ cancel }">
-      <b-button size="md" variant="secondary" @click="cancel()"
-        >{{ $t('message.cancel') }}
+      <b-button size="md" variant="secondary" @click="cancel()">
+        {{ $t('message.cancel') }}
       </b-button>
     </template>
   </b-modal>
@@ -59,9 +59,10 @@ export default {
     const interval = setInterval(() => {
       if (this.$refs.table) {
         this.$refs.table.refreshOptions({
-          showBtnDeleteSelected: this.isPermitted(
+          showBtnDeleteSelected: this.isPermitted([
             this.PERMISSIONS.PORTFOLIO_MANAGEMENT,
-          ),
+            this.PERMISSIONS.PORTFOLIO_MANAGEMENT_UPDATE,
+          ]),
         });
         clearInterval(interval);
       }
@@ -118,7 +119,6 @@ export default {
                 this.$toastr.w(this.$t('message.empty_selection'));
                 return;
               }
-
               this.untag(selected.map((row) => row.uuid)).then(() => {
                 this.$toastr.s(this.$t('message.tag_unassigned_successfully'));
                 this.refreshTable();

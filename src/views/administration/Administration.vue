@@ -1,5 +1,14 @@
 <template>
-  <div class="animated fadeIn" v-permission="'SYSTEM_CONFIGURATION'">
+  <div
+    class="animated fadeIn"
+    v-permission:or="[
+      'SYSTEM_CONFIGURATION',
+      'SYSTEM_CONFIGURATION_CREATE',
+      'SYSTEM_CONFIGURATION_READ',
+      'SYSTEM_CONFIGURATION_UPDATE',
+      'SYSTEM_CONFIGURATION_DELETE',
+    ]"
+  >
     <b-row>
       <b-col xs="6" sm="4" md="4" lg="3" id="admin-menu-column">
         <admin-menu />
@@ -20,25 +29,13 @@ import AdminMenu from './AdminMenu';
 
 // Configuration plugins
 import BomFormats from './configuration/BomFormats';
-import Email from './configuration/Email';
 import General from './configuration/General';
 import InternalComponents from './configuration/InternalComponents';
-import Jira from './configuration/JiraConfig';
-import Search from './configuration/Search.vue';
-import TaskScheduler from './configuration/TaskScheduler.vue';
+import RiskScore from './configuration/RiskScore.vue';
 import Telemetry from './configuration/Telemetry.vue';
-import Experimental from './configuration/Experimental.vue';
 import WelcomeMessage from './configuration/WelcomeMessage.vue';
-// Analyzer plugins
-import InternalAnalyzer from './analyzers/InternalAnalyzer';
-import OssIndexAnalyzer from './analyzers/OssIndexAnalyzer';
-import SnykAnalyzer from './analyzers/SnykAnalyzer';
-import TrivyAnalyzer from './analyzers/TrivyAnalyzer';
-import VulnDbAnalyzer from './analyzers/VulnDbAnalyzer';
-// Vulnerability sources
-import VulnSourceGitHubAdvisories from './vuln-sources/VulnSourceGitHubAdvisories';
-import VulnSourceNvd from './vuln-sources/VulnSourceNvd';
-import VulnSourceOSVAdvisories from './vuln-sources/VulnSourceOSVAdvisories';
+// Secrets plugins
+import SecretsManagement from './secrets/SecretsManagement.vue';
 // Repositories
 import Cargo from './repositories/Cargo';
 import Composer from './repositories/Composer';
@@ -68,6 +65,10 @@ import OidcUsers from './accessmanagement/OidcUsers';
 import Permissions from './accessmanagement/Permissions';
 import PortfolioAccessControl from './accessmanagement/PortfolioAccessControl';
 import Teams from './accessmanagement/Teams';
+// Workflow plugins
+import TaskQueueList from '@/views/administration/workflows/TaskQueueList.vue';
+import WorkflowRunDetail from '@/views/administration/workflows/WorkflowRunDetail.vue';
+import WorkflowRunList from '@/views/administration/workflows/WorkflowRunList.vue';
 
 export default {
   components: {
@@ -76,21 +77,10 @@ export default {
     General,
     WelcomeMessage,
     BomFormats,
-    Email,
-    Jira,
     InternalComponents,
-    TaskScheduler,
     Telemetry,
-    Search,
-    Experimental,
-    InternalAnalyzer,
-    OssIndexAnalyzer,
-    VulnDbAnalyzer,
-    SnykAnalyzer,
-    TrivyAnalyzer,
-    VulnSourceNvd,
-    VulnSourceGitHubAdvisories,
-    VulnSourceOSVAdvisories,
+    RiskScore,
+    SecretsManagement,
     Cargo,
     Composer,
     Gem,
@@ -116,13 +106,20 @@ export default {
     Teams,
     Permissions,
     PortfolioAccessControl,
+    TaskQueueList,
+    WorkflowRunDetail,
+    WorkflowRunList,
   },
   created() {
     // Specifies the admin plugin metadata (Vue component, i18n name, and href) of the plugin to load
     EventBus.$on('admin:plugin', (plugin) => {
-      this.selectedComponent = plugin.component;
+      if (plugin.component) {
+        this.selectedComponent = plugin.component;
+      }
       this.header = plugin.name;
-      this.href = plugin.href;
+      if (plugin.href) {
+        this.href = plugin.href;
+      }
     });
   },
   data() {

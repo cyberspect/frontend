@@ -22,17 +22,23 @@
     </b-form-group>
     <b-form-group
       id="fieldset-2"
-      :label="this.$t('admin.publisher_class')"
+      :label="this.$t('admin.extension_name')"
       label-for="input-2"
       label-class="required"
     >
-      <b-form-input
+      <b-form-select
         id="input-2"
-        v-model="publisherClass"
+        v-model="extensionName"
+        :options="availableExtensions"
         class="required"
         required
-        trim
-      />
+      >
+        <template #first>
+          <b-form-select-option :value="null" disabled>
+            {{ $t('admin.select_extension') }}
+          </b-form-select-option>
+        </template>
+      </b-form-select>
     </b-form-group>
     <b-form-group
       id="fieldset-3"
@@ -69,13 +75,11 @@
       label-for="input-5"
       label-class="required"
     >
-      <b-form-textarea
+      <code-mirror-editor
         id="input-5"
         v-model="template"
-        class="required"
-        rows="10"
-        required
-        trim
+        :language="jinjaLanguage"
+        :line-wrapping="false"
       />
     </b-form-group>
     <template v-slot:modal-footer="{ cancel }">
@@ -92,19 +96,25 @@
 <script>
 import permissionsMixin from '../../../mixins/permissionsMixin';
 import EventBus from '../../../shared/eventbus';
+import CodeMirrorEditor from '../../components/CodeMirrorEditor';
+import { jinja } from '@codemirror/lang-jinja';
 
 export default {
   mixins: [permissionsMixin],
+  components: {
+    CodeMirrorEditor,
+  },
   mounted() {
+    this.fetchAvailableExtensions();
     EventBus.$on('admin:templates:cloneTemplate', (template) => {
       this.name = `${template.name} - clone`;
-      this.publisherClass = template.publisherClass;
+      this.extensionName = template.extensionName;
       this.description = template.description;
       this.mimeType = template.templateMimeType;
       this.template = template.template;
     });
     this.$root.$on('bv::modal::hide', (_, modalId) => {
-      if (modalId == 'createTemplateModal') {
+      if (modalId === 'createTemplateModal') {
         this.resetValues();
       }
     });
@@ -112,20 +122,38 @@ export default {
   data() {
     return {
       name: null,
-      publisherClass: null,
+      extensionName: null,
       description: null,
       mimeType: null,
       template: null,
+      jinjaLanguage: jinja(),
+      availableExtensions: [],
     };
   },
   methods: {
+    fetchAvailableExtensions: async function () {
+      try {
+        const url = `${this.$api.BASE_URL}/api/v2/extension-points/notification-publisher/extensions`;
+        const response = await this.axios.get(url);
+        const extensions = Array.isArray(response?.data?.items)
+          ? response.data.items
+          : [];
+        this.availableExtensions = extensions.map((extension) => ({
+          value: extension.name,
+          text: extension.name,
+        }));
+      } catch (error) {
+        console.error('Failed to fetch available extensions:', error);
+        this.$toastr.w(this.$t('condition.unsuccessful_action'));
+      }
+    },
     createTemplate: function () {
       let url = `${this.$api.BASE_URL}/${this.$api.URL_NOTIFICATION_PUBLISHER}`;
       this.axios
         .put(url, {
           name: this.name,
           description: this.description,
-          publisherClass: this.publisherClass,
+          extensionName: this.extensionName,
           template: this.template,
           templateMimeType: this.mimeType,
           defaultPublisher: false,
@@ -141,7 +169,7 @@ export default {
     },
     resetValues: function () {
       this.name = null;
-      this.publisherClass = null;
+      this.extensionName = null;
       this.description = null;
       this.mimeType = null;
       this.template = null;

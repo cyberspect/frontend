@@ -1,11 +1,23 @@
 <template>
-  <div class="animated fadeIn" v-permission="'POLICY_MANAGEMENT'">
+  <div
+    class="animated fadeIn"
+    v-permission:or="[
+      'POLICY_MANAGEMENT',
+      'POLICY_MANAGEMENT_CREATE',
+      'POLICY_MANAGEMENT_READ',
+      'POLICY_MANAGEMENT_UPDATE',
+      'POLICY_MANAGEMENT_DELETE',
+    ]"
+  >
     <div id="licenseGroupsToolbar" class="bs-table-custom-toolbar">
       <b-button
         size="md"
         variant="outline-primary"
         v-b-modal.createLicenseGroupModal
-        v-permission="PERMISSIONS.POLICY_MANAGEMENT"
+        v-permission:or="[
+          PERMISSIONS.POLICY_MANAGEMENT,
+          PERMISSIONS.POLICY_MANAGEMENT_CREATE,
+        ]"
       >
         <span class="fa fa-plus"></span>
         {{ $t('message.create_license_group') }}
@@ -131,7 +143,7 @@ export default {
                               <b-col md="3" class="d-flex align-items-center text-muted">
                                 <a
                                   v-if="license.licenseId"
-                                  :href="'/portfolio/licenses/' + encodeURIComponent(license.licenseId)"
+                                  :href="'/licenses/' + encodeURIComponent(license.licenseId)"
                                 >
                                   {{ license.licenseId }}
                                 </a>

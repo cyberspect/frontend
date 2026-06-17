@@ -6,7 +6,6 @@
         <div v-show="apiKey.legacy">
           <span
             class="ml-3"
-            style="float: right"
             data-toggle="tooltip"
             data-placement="bottom"
             v-b-tooltip.hover
@@ -20,20 +19,20 @@
         <b-button
           size="sm"
           class="action-icon ml-3"
-          v-on:click="$emit('regenerateClicked')"
-          v-b-tooltip.hover
-          :title="$t('admin.regenerate_api_key_title')"
-        >
-          <span class="fa fa-repeat"></span>
-        </b-button>
-        <b-button
-          size="sm"
-          class="action-icon ml-3"
           v-b-tooltip.hover
           v-b-modal="`editApiKeyCommentModal-${keyId}`"
           :title="$t('admin.edit_api_key_comment')"
         >
           <span class="fa fa-edit"></span>
+        </b-button>
+        <b-button
+          size="sm"
+          class="action-icon ml-3"
+          v-on:click="$emit('regenerateClicked')"
+          v-b-tooltip.hover
+          :title="$t('admin.regenerate_api_key_title')"
+        >
+          <span class="fa fa-repeat"></span>
         </b-button>
         <b-button
           size="sm"
@@ -66,7 +65,6 @@
 </template>
 
 <script>
-import MurmurHash2 from 'imurmurhash';
 import common from '../../../shared/common';
 import EditApiKeyCommentModal from './EditApiKeyCommentModal.vue';
 

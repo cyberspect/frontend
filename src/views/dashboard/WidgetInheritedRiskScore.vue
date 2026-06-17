@@ -16,7 +16,7 @@ export default {
       let chartLabels = [];
       let chartData = [];
       for (let i = 0; i < metrics.length; i++) {
-        chartLabels.push(metrics[i].firstOccurrence); // Store raw timestamp
+        chartLabels.push(metrics[i].firstOccurrence);
         chartData.push(metrics[i].inheritedRiskScore);
       }
 

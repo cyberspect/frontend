@@ -2,7 +2,12 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import i18n from '../i18n';
 import EventBus from '../shared/eventbus';
-import { getToken, hasPermission } from '../shared/permissions';
+import {
+  getToken,
+  getPermissions,
+  hasPermission,
+  storePermissions,
+} from '../shared/permissions';
 import { getContextPath } from '../shared/utils';
 
 // Containers
@@ -21,7 +26,10 @@ const VulnerabilityAudit = () =>
   import('@/views/globalAudit/VulnerabilityAudit');
 const LicenseList = () => import('@/views/portfolio/licenses/LicenseList');
 const PolicyManagement = () => import('@/views/policy/PolicyManagement');
+const VulnerabilityPolicyEditor = () =>
+  import('@/views/policy/VulnerabilityPolicyEditor');
 const Project = () => import('@/views/portfolio/projects/Project');
+const PolicyViolationAudit = () => import('@/views/audit/PolicyViolationAudit');
 
 const PolicyViolationAudit = () => import('@/views/audit/PolicyViolationAudit');
 
@@ -31,35 +39,21 @@ const BomFormats = () =>
   import('@/views/administration/configuration/BomFormats');
 const WelcomeMessage = () =>
   import('@/views/administration/configuration/WelcomeMessage');
-const Email = () => import('@/views/administration/configuration/Email');
-const Jira = () => import('@/views/administration/configuration/JiraConfig');
 const InternalComponents = () =>
   import('@/views/administration/configuration/InternalComponents');
-const TaskScheduler = () =>
-  import('@/views/administration/configuration/TaskScheduler');
+const Maintenance = () =>
+  import('@/views/administration/configuration/Maintenance');
+const RiskScore = () =>
+  import('@/views/administration/configuration/RiskScore');
 const Telemetry = () =>
-  import('@/views/administration/configuration/Telemetry');
-const Search = () => import('@/views/administration/configuration/Search');
-const Experimental = () =>
-  import('@/views/administration/configuration/Experimental');
+  import('@/views/administration/configuration/Telemetry.vue');
+const SecretsManagement = () =>
+  import('@/views/administration/secrets/SecretsManagement.vue');
 
-const InternalAnalyzer = () =>
-  import('@/views/administration/analyzers/InternalAnalyzer');
-const OssIndexAnalyzer = () =>
-  import('@/views/administration/analyzers/OssIndexAnalyzer');
-const VulnDbAnalyzer = () =>
-  import('@/views/administration/analyzers/VulnDbAnalyzer');
-const SnykAnalyzer = () =>
-  import('@/views/administration/analyzers/SnykAnalyzer');
-const TrivyAnalyzer = () =>
-  import('@/views/administration/analyzers/TrivyAnalyzer');
+const AnalyzerView = () => import('@/views/administration/analyzers/Index');
 
-const VulnSourceNvd = () =>
-  import('@/views/administration/vuln-sources/VulnSourceNvd');
-const VulnSourceGitHubAdvisories = () =>
-  import('@/views/administration/vuln-sources/VulnSourceGitHubAdvisories');
-const VulnSourceOSVAdvisories = () =>
-  import('@/views/administration/vuln-sources/VulnSourceOSVAdvisories');
+const VulnSourceView = () =>
+  import('@/views/administration/vuln-sources/Index');
 
 const Cargo = () => import('@/views/administration/repositories/Cargo');
 const Composer = () => import('@/views/administration/repositories/Composer');
@@ -78,6 +72,8 @@ const Python = () => import('@/views/administration/repositories/Python');
 const Alerts = () => import('@/views/administration/notifications/Alerts');
 const Templates = () =>
   import('@/views/administration/notifications/Templates');
+const Publishers = () =>
+  import('@/views/administration/notifications/Publishers');
 
 const FortifySsc = () =>
   import('@/views/administration/integrations/FortifySsc');
@@ -99,6 +95,12 @@ const Permissions = () =>
   import('@/views/administration/accessmanagement/Permissions');
 const PortfolioAccessControl = () =>
   import('@/views/administration/accessmanagement/PortfolioAccessControl');
+const TaskQueueList = () =>
+  import('@/views/administration/workflows/TaskQueueList');
+const WorkflowRunList = () =>
+  import('@/views/administration/workflows/WorkflowRunList');
+const WorkflowRunDetail = () =>
+  import('@/views/administration/workflows/WorkflowRunDetail');
 
 const Component = () => import('@/views/portfolio/projects/Component');
 const Service = () => import('@/views/portfolio/projects/Service');
@@ -130,7 +132,7 @@ function configRoutes() {
             i18n: 'message.dashboard',
             sectionPath: '/dashboard',
             sectionName: 'Dashboard',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -142,7 +144,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -164,7 +166,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -179,7 +181,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -194,7 +196,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -210,7 +212,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -222,7 +224,7 @@ function configRoutes() {
             i18n: 'message.component_search',
             sectionPath: '/components',
             sectionName: 'Component Lookup',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -238,7 +240,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -250,7 +252,7 @@ function configRoutes() {
             i18n: 'message.projects',
             sectionPath: '/projects',
             sectionName: 'Projects',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -262,7 +264,7 @@ function configRoutes() {
             i18n: 'message.vulnerabilities',
             sectionPath: '/vulnerabilities',
             sectionName: 'Vulnerabilities',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -281,7 +283,7 @@ function configRoutes() {
             i18n: 'message.vulnerabilities',
             sectionPath: '/vulnerabilities',
             sectionName: 'Vulnerabilities',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -305,7 +307,7 @@ function configRoutes() {
             i18n: 'message.licenses',
             sectionPath: '/licenses',
             sectionName: 'Licenses',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
           },
         },
         {
@@ -323,20 +325,65 @@ function configRoutes() {
             i18n: 'message.licenses',
             sectionPath: '/licenses',
             sectionName: 'Licenses',
-            permission: 'VIEW_PORTFOLIO',
+            permissions: ['VIEW_PORTFOLIO'],
+          },
+        },
+        {
+          path: 'policy/vulnerability/new',
+          name: 'VulnerabilityPolicyCreate',
+          component: VulnerabilityPolicyEditor,
+          meta: {
+            title: i18n.t('message.policy_editor_title_create'),
+            i18n: 'message.policy_management',
+            sectionPath: '/policy',
+            sectionName: 'Policy Management',
+            permissions: ['POLICY_MANAGEMENT', 'POLICY_MANAGEMENT_CREATE'],
+          },
+        },
+        {
+          path: 'policy/vulnerability/:uuid',
+          name: 'VulnerabilityPolicyEdit',
+          component: VulnerabilityPolicyEditor,
+          props: (route) => ({ uuid: route.params.uuid }),
+          meta: {
+            title: i18n.t('message.vulnerability_policies'),
+            i18n: 'message.policy_management',
+            sectionPath: '/policy',
+            sectionName: 'Policy Management',
+            permissions: ['POLICY_MANAGEMENT', 'POLICY_MANAGEMENT_READ'],
           },
         },
         {
           path: 'policy',
           name: 'Policy Management',
-          alias: ['policy/policies', 'policy/licenseGroups'],
+          alias: [
+            'policy/policies',
+            'policy/licenseGroups',
+            'policy/vulnerability',
+          ],
           component: PolicyManagement,
           meta: {
             title: i18n.t('message.policy_management'),
             i18n: 'message.policy_management',
             sectionPath: '/policy',
             sectionName: 'Policy Management',
-            permission: 'POLICY_MANAGEMENT',
+            permissions: [
+              'POLICY_MANAGEMENT',
+              'POLICY_MANAGEMENT_CREATE',
+              'POLICY_MANAGEMENT_READ',
+              'POLICY_MANAGEMENT_UPDATE',
+              'POLICY_MANAGEMENT_DELETE',
+            ],
+          },
+        },
+        {
+          path: 'policyViolationAudit',
+          component: PolicyViolationAudit,
+          meta: {
+            title: i18n.t('message.policy_violation_audit'),
+            i18n: 'message.policy_violation_audit',
+            sectionPath: '/audit',
+            permission: 'VIEW_POLICY_VIOLATION',
           },
         },
         {
@@ -360,7 +407,13 @@ function configRoutes() {
             i18n: 'message.administration',
             sectionPath: '/admin',
             sectionName: 'Admin',
-            permission: 'SYSTEM_CONFIGURATION',
+            permissions: [
+              'SYSTEM_CONFIGURATION',
+              'SYSTEM_CONFIGURATION_CREATE',
+              'SYSTEM_CONFIGURATION_READ',
+              'SYSTEM_CONFIGURATION_UPDATE',
+              'SYSTEM_CONFIGURATION_DELETE',
+            ],
           },
           children: [
             {
@@ -373,7 +426,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -384,34 +443,18 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
               path: 'configuration/welcomeMessage',
               component: WelcomeMessage,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'configuration/email',
-              component: Email,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'integrations/jira',
-              component: Jira,
               meta: {
                 title: i18n.t('message.administration'),
                 i18n: 'message.administration',
@@ -428,18 +471,47 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
-              path: 'configuration/taskScheduler',
-              component: TaskScheduler,
+              path: 'configuration/maintenance',
+              component: Maintenance,
               meta: {
                 title: i18n.t('message.administration'),
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
+              },
+            },
+            {
+              path: 'configuration/riskscore',
+              component: RiskScore,
+              meta: {
+                title: i18n.t('message.administration'),
+                i18n: 'message.administration',
+                sectionPath: '/admin',
+                sectionName: 'Admin',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -450,119 +522,72 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
-              path: 'configuration/search',
-              component: Search,
+              path: 'secrets/management',
+              component: SecretsManagement,
               meta: {
                 title: i18n.t('message.administration'),
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SECRET_MANAGEMENT',
+                  'SECRET_MANAGEMENT_CREATE',
+                  'SECRET_MANAGEMENT_READ',
+                  'SECRET_MANAGEMENT_UPDATE',
+                  'SECRET_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
-              path: 'configuration/experimental',
-              component: Experimental,
+              path: 'analyzers',
+              redirect: 'analyzers/internal',
+            },
+            {
+              path: 'analyzers/:extensionName',
+              component: AnalyzerView,
               meta: {
                 title: i18n.t('message.administration'),
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
-              path: 'analyzers/internal',
-              alias: ['analyzers'],
-              component: InternalAnalyzer,
+              path: 'vulnerabilitySources',
+              redirect: 'vulnerabilitySources/nvd',
+            },
+            {
+              path: 'vulnerabilitySources/:extensionName',
+              component: VulnSourceView,
               meta: {
                 title: i18n.t('message.administration'),
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'analyzers/oss',
-              component: OssIndexAnalyzer,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'analyzers/vulnDB',
-              component: VulnDbAnalyzer,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'analyzers/snyk',
-              component: SnykAnalyzer,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'analyzers/trivy',
-              component: TrivyAnalyzer,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'vulnerabilitySources/nvd',
-              alias: ['vulnerabilitySources'],
-              component: VulnSourceNvd,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'vulnerabilitySources/github',
-              component: VulnSourceGitHubAdvisories,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
-              },
-            },
-            {
-              path: 'vulnerabilitySources/osv',
-              component: VulnSourceOSVAdvisories,
-              meta: {
-                title: i18n.t('message.administration'),
-                i18n: 'message.administration',
-                sectionPath: '/admin',
-                sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -574,7 +599,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -585,7 +616,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -596,7 +633,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -607,7 +650,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -618,7 +667,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -629,7 +684,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -640,7 +701,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -651,7 +718,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -662,7 +735,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -673,7 +752,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -684,7 +769,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -695,7 +786,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -706,7 +803,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -718,7 +821,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -729,7 +838,47 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
+              },
+            },
+            {
+              path: 'notifications/publishers',
+              component: Publishers,
+              meta: {
+                title: i18n.t('message.administration'),
+                i18n: 'message.administration',
+                sectionPath: '/admin',
+                sectionName: 'Admin',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
+              },
+            },
+            {
+              path: 'notifications/publishers/:extensionName',
+              component: Publishers,
+              meta: {
+                title: i18n.t('message.administration'),
+                i18n: 'message.administration',
+                sectionPath: '/admin',
+                sectionName: 'Admin',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -741,7 +890,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -752,7 +907,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -763,7 +924,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'SYSTEM_CONFIGURATION',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_CREATE',
+                  'SYSTEM_CONFIGURATION_READ',
+                  'SYSTEM_CONFIGURATION_UPDATE',
+                  'SYSTEM_CONFIGURATION_DELETE',
+                ],
               },
             },
             {
@@ -775,7 +942,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -786,7 +959,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -797,7 +976,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -808,7 +993,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -819,7 +1010,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -830,7 +1027,13 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
               },
             },
             {
@@ -841,7 +1044,54 @@ function configRoutes() {
                 i18n: 'message.administration',
                 sectionPath: '/admin',
                 sectionName: 'Admin',
-                permission: 'ACCESS_MANAGEMENT',
+                permissions: [
+                  'ACCESS_MANAGEMENT',
+                  'ACCESS_MANAGEMENT_CREATE',
+                  'ACCESS_MANAGEMENT_READ',
+                  'ACCESS_MANAGEMENT_UPDATE',
+                  'ACCESS_MANAGEMENT_DELETE',
+                ],
+              },
+            },
+            {
+              path: 'workflows/taskQueues',
+              component: TaskQueueList,
+              meta: {
+                title: i18n.t('admin.task_queues'),
+                i18n: 'admin.task_queues',
+                sectionPath: '/taskQueues',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_READ',
+                ],
+              },
+            },
+            {
+              path: 'workflows/runs',
+              name: 'WorkflowRunList',
+              component: WorkflowRunList,
+              meta: {
+                title: i18n.t('admin.workflow_runs'),
+                i18n: 'admin.workflow_runs',
+                sectionPath: '/workflowRuns',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_READ',
+                ],
+              },
+            },
+            {
+              path: 'workflows/runs/:id',
+              name: 'WorkflowRunDetail',
+              props: (route) => ({ id: route.params.id }),
+              component: WorkflowRunDetail,
+              meta: {
+                i18n: 'admin.workflow_runs',
+                sectionPath: '/workflowRuns',
+                permissions: [
+                  'SYSTEM_CONFIGURATION',
+                  'SYSTEM_CONFIGURATION_READ',
+                ],
               },
             },
           ],
@@ -859,7 +1109,7 @@ function configRoutes() {
             i18n: 'message.vulnerability_audit',
             sectionPath: '/vulnerabilityAudit',
             sectionName: 'Vulnerability Audit',
-            permission: 'VIEW_VULNERABILITY',
+            permissions: ['VIEW_VULNERABILITY'],
           },
         },
         // The following route redirects URLs from legacy Dependency-Track UI to new URL format.
@@ -962,31 +1212,65 @@ router.beforeEach((to, from, next) => {
     next({ name: 'Login', query: { redirect: to.fullPath }, replace: true });
   };
 
-  if (to.meta.permission) {
+  if (to.meta.permissions) {
     // non-public route, check permissions
-    const jwt = getToken();
-    if (jwt) {
-      if (hasPermission(to.meta.permission)) {
-        // let backend verify the token
+    const token = getToken();
+    if (token) {
+      const checkAndProceed = () => {
+        const isAllowed = to.meta.permissions.some((permission) =>
+          hasPermission(permission),
+        );
+        if (isAllowed) {
+          // let backend verify the token
+          router.app.axios
+            .get(
+              `${router.app.$api.BASE_URL}/${router.app.$api.URL_USER_SELF}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            )
+            .then((result) => {
+              Vue.prototype.$currentUser = result.data;
+              // allowed to proceed
+              next();
+            })
+            .catch(() => {
+              // token is stale
+              // notify app about this
+              EventBus.$emit('authenticated', null);
+              // redirect to login page
+              redirectToLogin();
+            });
+        } else {
+          Vue.prototype.$toastr.e(i18n.t('condition.forbidden'));
+          next({ name: 'Dashboard', replace: true });
+        }
+      };
+
+      if (getPermissions().length === 0) {
+        // permissions missing (e.g. after storage cleared), re-fetch before deciding
         router.app.axios
-          .get(`${router.app.$api.BASE_URL}/${router.app.$api.URL_USER_SELF}`, {
-            headers: { Authorization: `Bearer ${jwt}` },
-          })
+          .get(
+            `${router.app.$api.BASE_URL}/${router.app.$api.URL_USER_SELF_PERMISSIONS}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          )
           .then((result) => {
-            Vue.prototype.$currentUser = result.data;
-            // allowed to proceed
-            next();
+            if (!Array.isArray(result.data)) {
+              throw new Error(
+                `Unexpected permissions response: ${JSON.stringify(result.data)}`,
+              );
+            }
+            storePermissions(result.data);
+            checkAndProceed();
           })
           .catch(() => {
-            // token is stale
-            // notify app about this
             EventBus.$emit('authenticated', null);
-            // redirect to login page
             redirectToLogin();
           });
       } else {
-        Vue.prototype.$toastr.e(i18n.t('condition.forbidden'));
-        next({ name: 'Dashboard', replace: true });
+        checkAndProceed();
       }
     } else {
       // no token at all, redirect to login page

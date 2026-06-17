@@ -3,10 +3,6 @@ export default {
     return {
       availableCollectionLogics: [
         {
-          value: 'NONE',
-          text: this.$i18n.t('message.project_collection_logic_none'),
-        },
-        {
           value: 'AGGREGATE_DIRECT_CHILDREN',
           text: this.$i18n.t(
             'message.project_collection_logic_aggregate_direct_children',
