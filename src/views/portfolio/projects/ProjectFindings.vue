@@ -11,8 +11,8 @@
         variant="outline-primary"
         v-b-modal.projectUploadVexModal
         v-permission:or="[
-          PERMISSIONS.VIEW_VULNERABILITY,
           PERMISSIONS.VULNERABILITY_ANALYSIS,
+          PERMISSIONS.VULNERABILITY_ANALYSIS_CREATE,
         ]"
       >
         <span class="fa fa-upload"></span> {{ $t('message.apply_vex') }}
@@ -29,6 +29,7 @@
         v-permission:or="[
           PERMISSIONS.VIEW_VULNERABILITY,
           PERMISSIONS.VULNERABILITY_ANALYSIS,
+          PERMISSIONS.VULNERABILITY_ANALYSIS_READ,
         ]"
       >
         <span class="fa fa-download"></span> {{ $t('message.export_vex') }}
@@ -45,6 +46,7 @@
         v-permission:or="[
           PERMISSIONS.VIEW_VULNERABILITY,
           PERMISSIONS.VULNERABILITY_ANALYSIS,
+          PERMISSIONS.VULNERABILITY_ANALYSIS_READ,
         ]"
       >
         <span class="fa fa-download"></span> {{ $t('message.export_vdr') }}
@@ -58,7 +60,7 @@
         size="md"
         variant="outline-primary"
         @click="reAnalyze()"
-        v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY]"
+        v-permission:or="[PERMISSIONS.VULNERABILITY_ANALYSIS]"
       >
         <span class="fa fa-refresh"></span>
         {{ $t('message.project_reanalyze') }}
@@ -179,12 +181,7 @@ export default {
           field: 'component.version',
           sortable: true,
           formatter(value, row, index) {
-            if (
-              Object.prototype.hasOwnProperty.call(
-                row.component,
-                'latestVersion',
-              )
-            ) {
+            if (row.component.latestVersion) {
               if (
                 compareVersions(
                   row.component.latestVersion,
@@ -298,7 +295,7 @@ export default {
         {
           title: this.$t('message.severity'),
           field: 'vulnerability.severity',
-          sortName: 'vulnerability.severityRank',
+          sortName: 'vulnerability.severity',
           sortable: true,
           formatter(value, row, index) {
             if (typeof value !== 'undefined') {
@@ -358,7 +355,7 @@ export default {
         showRefresh: true,
         pagination: true,
         silentSort: false,
-        sidePagination: 'client',
+        sidePagination: 'server',
         toolbar: '#findingsToolbar',
         queryParamsType: 'pageSize',
         pageList: '[10, 25, 50, 100]',

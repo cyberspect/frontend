@@ -4,32 +4,59 @@
 
 <script>
 // bootstrap-table still relies on jQuery for ajax calls, even though there's a supported Vue wrapper for it.
+import Vue from 'vue';
 import $ from 'jquery';
 import { getUrlVar } from './shared/utils';
-import { getToken } from './shared/permissions';
+import { INVALID_SORT_FIELD_PROBLEM_TYPE } from './shared/problemDetails';
+import { getToken, clearPermissions } from './shared/permissions';
 import EventBus from './shared/eventbus';
 import VueRouter from 'vue-router';
 
 export default {
   name: 'app',
   created() {
-    const setJwtForAjax = (jwt) => {
-      if (jwt) {
+    const setAuthHeader = (token) => {
+      if (token) {
         $.ajaxSettings.headers['Authorization'] =
-          this.axios.defaults.headers.common['Authorization'] = `Bearer ${jwt}`;
+          this.axios.defaults.headers.common['Authorization'] =
+            `Bearer ${token}`;
       } else {
         delete this.axios.defaults.headers.common['Authorization'];
         delete $.ajaxSettings.headers['Authorization'];
       }
     };
 
-    EventBus.$on('authenticated', (jwt) => {
-      if (jwt) {
-        sessionStorage.setItem('token', jwt);
+    const loadSystemCapabilities = () => {
+      Vue.prototype.$systemCapabilities = undefined;
+      EventBus.$emit('systemCapabilitiesUpdated', undefined);
+      this.axios
+        .get(
+          `${Vue.prototype.$api.BASE_URL}/${Vue.prototype.$api.URL_SYSTEM_CAPABILITIES}`,
+        )
+        .then((result) => {
+          Vue.prototype.$systemCapabilities = result.data.capabilities;
+          EventBus.$emit('systemCapabilitiesUpdated', result.data.capabilities);
+        })
+        .catch((error) => {
+          console.error('Failed to load system capabilities', error);
+          Vue.prototype.$systemCapabilities = undefined;
+          EventBus.$emit('systemCapabilitiesUpdated', undefined);
+        });
+    };
+
+    EventBus.$on('authenticated', (token) => {
+      if (token) {
+        sessionStorage.setItem('token', token);
       } else {
         sessionStorage.removeItem('token');
+        clearPermissions();
+        Vue.prototype.$systemCapabilities = undefined;
+        EventBus.$emit('systemCapabilitiesUpdated', undefined);
       }
-      setJwtForAjax(jwt);
+      setAuthHeader(token);
+      if (token) {
+        loadSystemCapabilities();
+      }
     });
 
     // ensure $.ajaxSettings.headers exists
@@ -37,7 +64,11 @@ export default {
       headers: {},
     });
 
-    setJwtForAjax(getToken());
+    const initialToken = getToken();
+    setAuthHeader(initialToken);
+    if (initialToken) {
+      loadSystemCapabilities();
+    }
 
     // Send XHR cross-site cookie credentials
     if (this.$api.WITH_CREDENTIALS) {
@@ -71,19 +102,36 @@ export default {
     }
 
     this.axios.interceptors.response.use(null, (error) => {
+      if (!error.response) {
+        this.$toastr.e(
+          this.$t('condition.unsuccessful_action'),
+          this.$t('condition.http_request_error'),
+        );
+        return Promise.reject(error);
+      }
+      const contentType =
+        (error.response.headers && error.response.headers['content-type']) ||
+        '';
+      // Suppress generic toast for problems with call site handler
+      // to avoid a duplicate notification.
+      if (
+        contentType.includes('application/problem+json') &&
+        error.response.data &&
+        error.response.data.type === INVALID_SORT_FIELD_PROBLEM_TYPE
+      ) {
+        return Promise.reject(error);
+      }
       // On error status codes (4xx - 5xx), display a toast with either:
       //  * The problem title and detail in case of an RFC 9457 response
       //  * the HTTP status code and text
       if (error.response.status >= 400 && error.response.status < 500) {
-        if (
-          error.response.headers['content-type'] === 'application/problem+json'
-        ) {
+        if (contentType.includes('application/problem+json')) {
           this.$toastr.w(error.response.data.detail, error.response.data.title);
         } else if (
           error.response.status === 400 &&
-          error.response.headers['content-type'] === 'application/json' &&
-          error.response.data &&
+          contentType.includes('application/json') &&
           Array.isArray(error.response.data) &&
+          error.response.data.length > 0 &&
           error.response.data[0].hasOwnProperty('invalidValue')
         ) {
           let validationError = error.response.data
@@ -100,10 +148,14 @@ export default {
           );
         }
       } else {
-        this.$toastr.e(
-          error.response.statusText + ' (' + error.response.status + ')',
-          this.$t('condition.server_error'),
-        );
+        if (contentType.includes('application/problem+json')) {
+          this.$toastr.w(error.response.data.detail, error.response.data.title);
+        } else {
+          this.$toastr.e(
+            error.response.statusText + ' (' + error.response.status + ')',
+            this.$t('condition.server_error'),
+          );
+        }
       }
       return Promise.reject(error);
     });

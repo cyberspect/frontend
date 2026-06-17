@@ -23,6 +23,7 @@ import TaggedCollectionProjectListModal from '@/views/portfolio/tags/TaggedColle
 import TaggedNotificationRuleListModal from '@/views/portfolio/tags/TaggedNotificationRuleListModal.vue';
 import TaggedPoliciesListModal from '@/views/portfolio/tags/TaggedPoliciesListModal.vue';
 import TaggedProjectListModal from '@/views/portfolio/tags/TaggedProjectListModal.vue';
+import TaggedVulnerabilityListModal from '@/views/portfolio/tags/TaggedVulnerabilityListModal.vue';
 import i18n from '@/i18n';
 import MurmurHash2 from 'imurmurhash';
 
@@ -46,7 +47,10 @@ export default {
   },
   mounted() {
     this.$refs.table.refreshOptions({
-      showBtnDeleteSelected: this.isPermitted(this.PERMISSIONS.TAG_MANAGEMENT),
+      showBtnDeleteSelected: this.isPermitted([
+        this.PERMISSIONS.TAG_MANAGEMENT,
+        this.PERMISSIONS.TAG_MANAGEMENT_DELETE,
+      ]),
     });
   },
   data() {
@@ -82,10 +86,10 @@ export default {
               },
               mixins: [permissionsMixin],
               template: `
-                <div>
-                  <b-link v-b-modal="\`taggedProjectListModal-${index}\`">{{ value }}</b-link>
-                  <tagged-project-list-modal :tag="tagName" :index="index"/>
-                </div>`,
+                  <div>
+                    <b-link v-b-modal="\`taggedProjectListModal-${index}\`">{{ value }}</b-link>
+                    <tagged-project-list-modal :tag="tagName" :index="index"/>
+                  </div>`,
               data() {
                 return {
                   index: index,
@@ -144,14 +148,46 @@ export default {
               },
               mixins: [permissionsMixin],
               template: `
-                <div>
-                  <b-link v-b-modal="\`taggedPoliciesListModal-${index}\`">{{ value }}</b-link>
-                  <tagged-policies-list-modal :tag="tagName" :index="index"/>
-                </div>`,
+                  <div>
+                    <b-link v-b-modal="\`taggedPoliciesListModal-${index}\`">{{ value }}</b-link>
+                    <tagged-policies-list-modal :tag="tagName" :index="index"/>
+                  </div>`,
               data() {
                 return {
                   index: index,
                   tagName: row.name,
+                  value: value,
+                };
+              },
+            });
+          },
+        },
+        {
+          title: this.$t('message.vulnerabilities'),
+          field: 'vulnerabilityCount',
+          sortable: true,
+          formatter: (value, row, index) => {
+            if (value === 0) {
+              return value;
+            }
+
+            return this.vueFormatter({
+              i18n,
+              components: {
+                TaggedVulnerabilityListModal,
+              },
+              mixins: [permissionsMixin],
+              template: `
+                  <div>
+                    <b-link v-b-modal="\`taggedVulnerabilityListModal-${index}\`">{{ value }}</b-link>
+                    <span v-if="error" class="fa fa-apple"></span>
+                    <tagged-vulnerability-list-modal :tag="tagName" :index="index"/>
+                  </div>`,
+              data() {
+                return {
+                  index: index,
+                  tagName: row.name,
+                  error: row.error,
                   value: value,
                 };
               },
@@ -166,7 +202,6 @@ export default {
             if (value === 0) {
               return value;
             }
-
             return this.vueFormatter({
               i18n,
               components: {
@@ -206,7 +241,6 @@ export default {
                 this.$toastr.w(this.$t('message.empty_selection'));
                 return;
               }
-
               this.deleteTags(selected.map((row) => row.name))
                 .then(() => {
                   this.$toastr.s(this.$t('message.selection_deleted'));

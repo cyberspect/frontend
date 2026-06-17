@@ -97,7 +97,10 @@
       v-if="license.isCustomLicense"
       variant="outline-danger"
       @click="removeCustomLicense"
-      v-permission="PERMISSIONS.SYSTEM_CONFIGURATION"
+      v-permission:or="[
+        PERMISSIONS.SYSTEM_CONFIGURATION,
+        PERMISSIONS.SYSTEM_CONFIGURATION_DELETE,
+      ]"
       >{{ $t('message.delete') }}</b-button
     >
   </div>
@@ -162,7 +165,7 @@ export default {
     },
     getTabFromRoute: function () {
       let pattern = new RegExp(
-        '/licenses\\/' + this.licenseId + '\\/([^\\/]*)',
+        '/licenses\\/' + this.licenseId + '\\/([^\\/?#]*)',
         'gi',
       );
       let tab = pattern.exec(this.$route.fullPath.toLowerCase());

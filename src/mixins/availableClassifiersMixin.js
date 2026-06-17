@@ -3,10 +3,6 @@ export default {
     return {
       availableClassifiers: [
         {
-          value: 'NONE',
-          text: this.$i18n.t('message.component_none_classifier'),
-        },
-        {
           value: 'APPLICATION',
           text: this.$i18n.t('message.component_application'),
         },
@@ -36,15 +32,18 @@ export default {
           text: this.$i18n.t('message.component_machine_learning_model'),
         },
         { value: 'DATA', text: this.$i18n.t('message.component_data') },
+        {
+          value: 'CRYPTOGRAPHIC_ASSET',
+          text: this.$i18n.t('message.component_cryptographic_asset'),
+        },
       ],
     };
   },
   computed: {
     sortAvailableClassifiers: function () {
-      this.availableClassifiers.sort(function (a, b) {
+      return [...this.availableClassifiers].sort(function (a, b) {
         return a.value === 'NONE' ? -1 : a.text.localeCompare(b.text);
       });
-      return this.availableClassifiers;
     },
   },
 };

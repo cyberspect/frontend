@@ -57,9 +57,10 @@ export default {
     const interval = setInterval(() => {
       if (this.$refs.table) {
         this.$refs.table.refreshOptions({
-          showBtnDeleteSelected: this.isPermitted(
+          showBtnDeleteSelected: this.isPermitted([
             this.PERMISSIONS.POLICY_MANAGEMENT,
-          ),
+            this.PERMISSIONS.POLICY_MANAGEMENT_UPDATE,
+          ]),
         });
         clearInterval(interval);
       }
@@ -103,7 +104,6 @@ export default {
                 this.$toastr.w(this.$t('message.empty_selection'));
                 return;
               }
-
               this.untag(selected.map((row) => row.uuid)).then(() => {
                 this.$toastr.s(this.$t('message.tag_unassigned_successfully'));
                 this.refreshTable();

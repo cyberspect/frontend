@@ -9,14 +9,6 @@
         >
           <span class="fa fa-plus"></span> {{ $t('admin.create_template') }}
         </b-button>
-        <b-button
-          size="md"
-          variant="outline-primary"
-          v-b-modal.generalTemplateConfigurationModal
-        >
-          <span class="fa fa-wrench"></span>
-          {{ $t('admin.general_template_configuration') }}
-        </b-button>
       </div>
       <bootstrap-table
         ref="table"
@@ -27,7 +19,6 @@
       </bootstrap-table>
     </b-card-body>
     <create-template-modal v-on:refreshTable="refreshTable" />
-    <general-template-configuration-modal v-on:refreshTable="refreshTable" />
   </b-card>
 </template>
 
@@ -40,7 +31,8 @@ import BootstrapToggle from 'vue-bootstrap-toggle';
 import bootstrapTableMixin from '../../../mixins/bootstrapTableMixin';
 import BInputGroupFormInput from '../../../forms/BInputGroupFormInput';
 import CreateTemplateModal from './CreateTemplateModal';
-import GeneralTemplateConfigurationModal from './GeneralTemplateConfigurationModal';
+import CodeMirrorEditor from '../../components/CodeMirrorEditor';
+import { jinja } from '@codemirror/lang-jinja';
 
 export default {
   props: {
@@ -49,7 +41,6 @@ export default {
   mixins: [bootstrapTableMixin],
   components: {
     CreateTemplateModal,
-    GeneralTemplateConfigurationModal,
   },
   mounted() {
     EventBus.$on('admin:templates:rowUpdate', (index, row) => {
@@ -109,18 +100,14 @@ export default {
           return this.vueFormatter({
             i18n,
             template: `
+                <div>
                 <b-row class="expanded-row">
                   <b-col sm="6">
-                    <b-form-group v-if="template.defaultPublisher" id="fieldset-1" :label="this.$t('message.name')" label-for="input-1">
-                      <b-form-input id="input-1" v-model="template.name" disabled class="form-control disabled" trim />
+                    <b-form-group v-if="template.defaultPublisher" id="fieldset-2" :label="this.$t('admin.extension_name')" label-for="input-2">
+                      <b-form-input v-if="template.defaultPublisher" id="input-2" v-model="template.extensionName" disabled class="form-control disabled" readonly trim />
                     </b-form-group>
-                    <b-input-group-form-input v-if="!template.defaultPublisher" id="input-1" :label="$t('message.name')" input-group-size="mb-3"
-                                              required="true" type="text" v-model="template.name" />
-                    <b-form-group v-if="template.defaultPublisher" id="fieldset-2" :label="this.$t('admin.publisher_class')" label-for="input-2">
-                      <b-form-input v-if="template.defaultPublisher" id="input-2" v-model="template.publisherClass" disabled class="form-control disabled" readonly trim />
-                    </b-form-group>
-                    <b-input-group-form-input v-if="!template.defaultPublisher" id="input-2" :label="this.$t('admin.publisher_class')" input-group-size="mb-3"
-                                              required="true" type="text" v-model="template.publisherClass" />
+                    <b-input-group-form-input v-if="!template.defaultPublisher" id="input-2" :label="this.$t('admin.extension_name')" input-group-size="mb-3"
+                                              required="true" type="text" v-model="template.extensionName" />
                     <b-form-group v-if="template.defaultPublisher" id="fieldset-3" :label="this.$t('message.description')" label-for="input-3">
                       <b-form-textarea v-if="template.defaultPublisher" id="input-3" v-model="template.description" rows="4" disabled class="form-control disabled" readonly trim />
                     </b-form-group>
@@ -128,31 +115,37 @@ export default {
                                               required="true" type="text" v-model="template.description" />
                   </b-col>
                   <b-col sm="6">
-                    <b-form-group v-if="template.defaultPublisher" id="fieldset-4" :label="this.$t('admin.mime_type')" label-for="input-4">
-                      <b-form-input v-if="template.defaultPublisher" id="input-4" v-model="template.templateMimeType" disabled class="form-control disabled" readonly trim />
+                    <b-form-group v-if="template.defaultPublisher && template.templateMimeType" id="fieldset-4" :label="this.$t('admin.mime_type')" label-for="input-4">
+                      <b-form-input id="input-4" v-model="template.templateMimeType" disabled class="form-control disabled" readonly trim />
                     </b-form-group>
-                    <b-input-group-form-input v-if="!template.defaultPublisher" id="input-4" :label="this.$t('admin.mime_type')" input-group-size="mb-3"
+                    <b-input-group-form-input v-if="!template.defaultPublisher && template.templateMimeType" id="input-4" :label="this.$t('admin.mime_type')" input-group-size="mb-3"
                                               required="true" type="text" v-model="template.templateMimeType" />
-                    <b-form-group id="fieldset-5" :label="this.$t('admin.template')" label-for="imput-5">
-                      <b-form-textarea v-if="template.defaultPublisher" id="input-5" v-model="template.template" rows="10" disabled class="form-control disabled" readonly trim />
-                      <b-form-textarea v-else id="input-5" v-model="template.template" rows="10" class="form-control" required trim />
+                  </b-col>
+                </b-row>
+                <b-row class="expanded-row">
+                  <b-col sm="12">
+                    <b-form-group v-if="template.template" id="fieldset-5" :label="this.$t('admin.template')" label-for="input-5">
+                      <code-mirror-editor id="input-5" v-model="template.template" :read-only="template.defaultPublisher" :language="jinjaLanguage" initial-height="300px" />
                     </b-form-group>
                     <div style="text-align:right">
                       <b-button variant="outline-primary" @click="cloneNotificationPublisher">{{ $t('admin.clone_template') }}</b-button>
                       <b-button v-if="!template.defaultPublisher" variant="outline-primary" @click="updateNotificationPublisher">{{ $t('message.update') }}</b-button>
                       <b-button v-if="!template.defaultPublisher" variant="outline-danger" @click="deleteNotificationPublisher">{{ $t('admin.delete_template') }}</b-button>
-                    </div>    
+                    </div>
                   </b-col>
                 </b-row>
+                </div>
               `,
             data() {
               return {
                 template: row,
+                jinjaLanguage: jinja(),
               };
             },
             components: {
               BootstrapToggle,
               BInputGroupFormInput,
+              CodeMirrorEditor,
             },
             methods: {
               updateNotificationPublisher: function () {
@@ -162,7 +155,7 @@ export default {
                     uuid: this.template.uuid,
                     name: this.template.name,
                     description: this.template.description,
-                    publisherClass: this.template.publisherClass,
+                    extensionName: this.template.extensionName,
                     template: this.template.template,
                     templateMimeType: this.template.templateMimeType,
                   })

@@ -111,8 +111,8 @@ import EventBus from '../../shared/eventbus';
 import { getRedirectUrl, getContextPath } from '../../shared/utils';
 const qs = require('querystring');
 import common from '../../shared/common';
-import DOMPurify from 'dompurify';
 import * as permissions from '../../shared/permissions';
+import DOMPurify from 'dompurify';
 
 export default {
   name: 'Login',
@@ -183,21 +183,7 @@ export default {
         .post(url, qs.stringify(requestBody), config)
         .then((result) => {
           if (result.status === 200) {
-            let decodedToken = permissions.decodeToken(result.data);
-            if (
-              permissions.hasPermission(
-                permissions.VIEW_PORTFOLIO,
-                decodedToken,
-              )
-            ) {
-              EventBus.$emit('authenticated', result.data);
-              redirectTo
-                ? this.$router.replace(redirectTo)
-                : this.$router.replace({ name: 'Dashboard' });
-            } else {
-              this.$bvModal.show('modal-informational');
-              this.loginError = this.$t('message.login_permission_required');
-            }
+            return this.fetchAndCheckPermissions(result.data, redirectTo);
           }
         })
         .catch((err) => {
@@ -215,6 +201,33 @@ export default {
             this.$bvModal.show('modal-informational');
             this.loginError = this.$t('message.login_forbidden');
           }
+        });
+    },
+    fetchAndCheckPermissions(token, redirectTo) {
+      const permUrl =
+        this.$api.BASE_URL + '/' + this.$api.URL_USER_SELF_PERMISSIONS;
+      return axios
+        .get(permUrl, { headers: { Authorization: `Bearer ${token}` } })
+        .then((result) => {
+          if (!Array.isArray(result.data)) {
+            throw new Error(
+              `Unexpected permissions response: ${JSON.stringify(result.data)}`,
+            );
+          }
+          if (result.data.includes(permissions.VIEW_PORTFOLIO)) {
+            permissions.storePermissions(result.data);
+            EventBus.$emit('authenticated', token);
+            redirectTo
+              ? this.$router.replace(redirectTo)
+              : this.$router.replace({ name: 'Dashboard' });
+          } else {
+            this.$bvModal.show('modal-informational');
+            this.loginError = this.$t('message.login_permission_required');
+          }
+        })
+        .catch(() => {
+          this.$bvModal.show('modal-informational');
+          this.loginError = this.$t('condition.unsuccessful_action');
         });
     },
     isOidcAvailableInFrontend() {
@@ -285,7 +298,7 @@ export default {
             return;
           }
 
-          // Exchange OAuth2 Access Token for a JWT issued by Dependency-Track
+          // Exchange OAuth2 Access Token for a session token issued by Dependency-Track
           const url = this.$api.BASE_URL + '/' + this.$api.URL_USER_OIDC_LOGIN;
           const requestBody = {
             accessToken: oidcUser.access_token,
@@ -301,25 +314,8 @@ export default {
             .post(url, qs.stringify(requestBody), config)
             .then((result) => {
               if (result.status === 200) {
-                let decodedToken = permissions.decodeToken(result.data);
-                if (
-                  permissions.hasPermission(
-                    permissions.VIEW_PORTFOLIO,
-                    decodedToken,
-                  )
-                ) {
-                  EventBus.$emit('authenticated', result.data);
-                  // redirect to url from query param but only if it is save for redirection
-                  const redirectTo = getRedirectUrl(this.$router);
-                  redirectTo
-                    ? this.$router.replace(redirectTo)
-                    : this.$router.replace({ name: 'Dashboard' });
-                } else {
-                  this.$bvModal.show('modal-informational');
-                  this.loginError = this.$t(
-                    'message.login_permission_required',
-                  );
-                }
+                const redirectTo = getRedirectUrl(this.$router);
+                return this.fetchAndCheckPermissions(result.data, redirectTo);
               }
             })
             .catch((err) => {
