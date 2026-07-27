@@ -31,8 +31,6 @@ const VulnerabilityPolicyEditor = () =>
 const Project = () => import('@/views/portfolio/projects/Project');
 const PolicyViolationAudit = () => import('@/views/audit/PolicyViolationAudit');
 
-const PolicyViolationAudit = () => import('@/views/audit/PolicyViolationAudit');
-
 const Administration = () => import('@/views/administration/Administration');
 const General = () => import('@/views/administration/configuration/General');
 const BomFormats = () =>
@@ -383,18 +381,6 @@ function configRoutes() {
             title: i18n.t('message.policy_violation_audit'),
             i18n: 'message.policy_violation_audit',
             sectionPath: '/audit',
-            permission: 'VIEW_POLICY_VIOLATION',
-          },
-        },
-        {
-          path: 'policyViolationAudit',
-          name: 'Policy Violation Audit',
-          component: PolicyViolationAudit,
-          meta: {
-            title: i18n.t('message.policy_violation_audit'),
-            i18n: 'message.policy_violation_audit',
-            sectionPath: '/policyViolationAudit',
-            sectionName: 'Policy Violation Audit',
             permission: 'VIEW_POLICY_VIOLATION',
           },
         },
