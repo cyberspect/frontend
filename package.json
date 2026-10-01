@@ -1,6 +1,6 @@
 {
   "name": "@dependencytrack/frontend",
-  "version": "4.14.2",
+  "version": "4.14.3",
   "description": "Single Page Application for OWASP Dependency-Track",
   "author": "Steve Springett",
   "homepage": "https://dependencytrack.org/",
@@ -27,21 +27,21 @@
     "@coreui/icons": "0.4.1",
     "@coreui/vue": "2.1.2",
     "@johmun/vue-tags-input": "2.1.0",
-    "axios": "1.8.3",
+    "axios": "1.18.1",
     "bootstrap": "4.6.2",
     "bootstrap-table": "1.22.6",
     "bootstrap-vue": "2.23.1",
     "chart.js": "2.9.4",
     "core-js": "3.36.1",
     "css-vars-ponyfill": "2.4.9",
-    "dompurify": "3.3.2",
+    "dompurify": "3.4.12",
     "flexver": "1.1.1",
     "font-awesome": "4.7.0",
     "imurmurhash": "0.1.4",
     "jquery": "3.7.1",
     "jquery-treegrid": "0.3.0",
     "json5": "2.2.3",
-    "lodash-es": "4.17.21",
+    "lodash-es": "4.18.1",
     "oidc-client": "1.11.5",
     "perfect-scrollbar": "1.5.5",
     "showdown": "2.1.0",
@@ -66,7 +66,6 @@
   "devDependencies": {
     "@babel/core": "7.24.9",
     "@babel/eslint-parser": "7.24.1",
-    "@cyclonedx/cyclonedx-npm": "1.16.2",
     "@cyclonedx/webpack-plugin": "2.0.2",
     "@vue/babel-helper-vue-jsx-merge-props": "1.4.0",
     "@vue/babel-preset-jsx": "1.4.0",
@@ -100,7 +99,7 @@
     "not ie <= 10"
   ],
   "engines": {
-    "node": ">= 20",
-    "npm": ">= 9"
+    "node": ">= 22",
+    "npm": ">= 10"
   }
 }

@@ -6,7 +6,7 @@ on:
       app-version:
         type: string
         required: false
-        default: 'snapshot'
+        default: '4-snapshot'
         description: 'Set the version that should be set/used as tag for the container image'
       publish-container:
         type: boolean
@@ -29,14 +29,14 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag=v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # tag=v7.0.0
         with:
           persist-credentials: false
 
       - name: Set up NodeJs
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # tag=v6.3.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # tag=v7.0.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Run Npm Build
@@ -47,7 +47,7 @@ jobs:
           npm run build --if-present
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # tag=v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # tag=v7.0.1
         with:
           name: assembled-frontend
           path: |-
@@ -61,26 +61,26 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag=v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # tag=v7.0.0
         with:
           persist-credentials: false
 
       - name: Download Artifacts
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # tag=v8.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # tag=v8.0.1
         with:
           name: assembled-frontend
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # tag=v3.7.0
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # tag=v4.2.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # tag=v4.0.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # tag=v4.2.0
         id: buildx
         with:
           install: true
 
       - name: Login to Docker.io
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # tag=v4.0.0
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # tag=v4.4.0
         if: ${{ inputs.publish-container }}
         with:
           registry: docker.io
@@ -100,14 +100,14 @@ jobs:
             TAGS="${IMAGE_NAME}:${REF_NAME,,}"
           else
             TAGS="${IMAGE_NAME}:${APP_VERSION}"
-            if [[ "${APP_VERSION}" != "snapshot" ]]; then
+            if [[ "${APP_VERSION}" != *-* ]]; then
               TAGS="${TAGS},${IMAGE_NAME}:latest"
             fi
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: Build multi-arch Container Image
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # tag=v7.0.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # tag=v7.3.0
         with:
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |-
